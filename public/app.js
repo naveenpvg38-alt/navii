@@ -1158,33 +1158,83 @@
           if (dom.kpiTotalCompleted) dom.kpiTotalCompleted.textContent = String(data.totalServed);
           if (dom.kpiEmergencyCount) dom.kpiEmergencyCount.textContent = String(data.emergencyCount);
 
-          // Render Hourly Rush Chart
+          // Render Hourly Rush Chart (Non-overflowing robust track)
           if (dom.rushChartBars && data.hourlyRush) {
             const maxCount = Math.max(1, ...data.hourlyRush.map(h => h.count));
             dom.rushChartBars.innerHTML = data.hourlyRush.map(h => {
-              const heightPct = Math.round((h.count / maxCount) * 85);
+              const heightPct = Math.min(100, Math.max(10, Math.round((h.count / maxCount) * 100)));
               return `
-                <div class="rush-bar-item">
-                  <span class="rush-bar-val">${h.count}</span>
-                  <div class="rush-bar-fill" style="height: ${heightPct}%;"></div>
-                  <span class="rush-bar-label">${h.hour}</span>
+                <div class="rush-col" title="${h.count} patients at ${h.hour}">
+                  <span class="rush-val">${h.count}</span>
+                  <div class="rush-bar-track">
+                    <div class="rush-bar-fill" style="height: ${heightPct}%;"></div>
+                  </div>
+                  <span class="rush-label">${h.hour}</span>
                 </div>
               `;
             }).join('');
           }
 
-          // Render Department Breakdown
+          // Render Department Breakdown with Progress Bars
           if (dom.deptDistributionList && data.departmentBreakdown) {
             const keys = Object.keys(data.departmentBreakdown);
+            const totalPatients = keys.reduce((sum, k) => sum + data.departmentBreakdown[k], 0) || 1;
             if (keys.length === 0) {
-              dom.deptDistributionList.innerHTML = '<div style="font-size: 0.8rem; color: var(--text-muted);">No data yet</div>';
+              dom.deptDistributionList.innerHTML = '<div style="font-size: 0.8rem; color: var(--text-muted); text-align: center; padding: 0.5rem 0;">No department records yet</div>';
             } else {
-              dom.deptDistributionList.innerHTML = keys.map(k => `
-                <div class="dept-dist-row">
-                  <span>${escapeHtml(k)}</span>
-                  <strong>${data.departmentBreakdown[k]} patients</strong>
-                </div>
-              `).join('');
+              dom.deptDistributionList.innerHTML = keys.map(k => {
+                const count = data.departmentBreakdown[k];
+                const pct = Math.round((count / totalPatients) * 100);
+                return `
+                  <div class="dept-progress-item">
+                    <div class="dept-info-row">
+                      <span class="dept-name">🩺 ${escapeHtml(k)}</span>
+                      <span class="dept-count"><strong>${count}</strong> patient${count === 1 ? '' : 's'} (${pct}%)</span>
+                    </div>
+                    <div class="dept-progress-track">
+                      <div class="dept-progress-fill" style="width: ${pct}%;"></div>
+                    </div>
+                  </div>
+                `;
+              }).join('');
+            }
+          }
+
+          // Render Recent Consultations & Rx Logs Table
+          const tableBody = document.getElementById('analyticsTableBody');
+          const logCount = document.getElementById('analyticsLogCount');
+          const logs = data.history || [];
+
+          if (logCount) {
+            logCount.textContent = `${logs.length} consultation${logs.length === 1 ? '' : 's'} logged today`;
+          }
+
+          if (tableBody) {
+            if (logs.length === 0) {
+              tableBody.innerHTML = '<tr><td colspan="5" style="text-align: center; color: var(--text-muted); padding: 1.5rem;">No consultations completed today yet</td></tr>';
+            } else {
+              tableBody.innerHTML = logs.map(p => {
+                const prio = (p.priority || 'normal');
+                const prioBadge = prio === 'emergency' 
+                  ? '<span class="ticket-priority-pill priority-emergency" style="font-size: 0.65rem;">EMG</span>'
+                  : (prio === 'priority' ? '<span class="ticket-priority-pill priority-priority" style="font-size: 0.65rem;">PRIO</span>' : '<span class="ticket-priority-pill priority-normal" style="font-size: 0.65rem;">OPD</span>');
+                
+                const waitMins = (p.calledAt && p.registeredAt) 
+                  ? Math.max(0, Math.round((new Date(p.calledAt).getTime() - new Date(p.registeredAt).getTime()) / 60000))
+                  : 0;
+                const consultDuration = p.consultDurationMins || (p.calledAt && p.completedAt ? Math.max(1, Math.round((new Date(p.completedAt).getTime() - new Date(p.calledAt).getTime()) / 60000)) : 5);
+                const notes = p.consultationNotes || p.prescription || 'Routine checkup completed.';
+
+                return `
+                  <tr>
+                    <td><span class="table-token-badge">${p.token}</span></td>
+                    <td><strong>${escapeHtml(p.name)}</strong> ${p.age ? `<span style="color: var(--text-muted); font-size: 0.75rem;">(${p.age}y)</span>` : ''}</td>
+                    <td><div style="display: flex; align-items: center; gap: 0.35rem;">${prioBadge} <span style="font-size: 0.75rem;">${escapeHtml(p.department || 'General OPD')}</span></div></td>
+                    <td><span style="font-size: 0.75rem; white-space: nowrap;">Wait: ~${waitMins}m<br>Consult: ~${consultDuration}m</span></td>
+                    <td><div class="table-notes-preview" title="${escapeHtml(notes)}">📝 ${escapeHtml(notes)}</div></td>
+                  </tr>
+                `;
+              }).join('');
             }
           }
 
@@ -1207,29 +1257,71 @@
     });
   }
 
+  // Backdrop click dismissal for Modals
+  if (dom.analyticsModal) {
+    dom.analyticsModal.addEventListener('click', (e) => {
+      if (e.target === dom.analyticsModal) dom.analyticsModal.style.display = 'none';
+    });
+  }
+  if (dom.qrPassModal) {
+    dom.qrPassModal.addEventListener('click', (e) => {
+      if (e.target === dom.qrPassModal) dom.qrPassModal.style.display = 'none';
+    });
+  }
+
+  // Escape key to dismiss modals
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+      if (dom.analyticsModal) dom.analyticsModal.style.display = 'none';
+      if (dom.qrPassModal) dom.qrPassModal.style.display = 'none';
+    }
+  });
+
   if (dom.btnExportCsv) {
     dom.btnExportCsv.addEventListener('click', () => {
       triggerHaptic(20);
-      const history = (cachedAnalyticsData && cachedAnalyticsData.history) ? cachedAnalyticsData.history : queueState.completedPatients;
+      const history = (cachedAnalyticsData && cachedAnalyticsData.history && cachedAnalyticsData.history.length > 0) 
+        ? cachedAnalyticsData.history 
+        : queueState.completedPatients;
+        
       if (!history || history.length === 0) {
         showToast('No completed consultation records to export.', 'info', 'ℹ️');
         return;
       }
 
-      let csv = 'Token,Patient Name,Age,Department,Priority,Registered At,Called At,Completed At,Consult Duration (mins),Prescription / Notes\n';
+      // Professional CSV with UTF-8 BOM, friendly timestamps, and clean sanitized notes
+      let csv = 'Token,Patient Name,Age,Department,Priority,Registered Time,Called Time,Completed Time,Wait Time (min),Consult Duration (min),Clinical Notes & Prescription\n';
+      
       history.forEach(p => {
-        const cleanNotes = (p.consultationNotes || p.prescription || '').replace(/"/g, '""').replace(/\n/g, ' ');
-        csv += `"${p.token}","${p.name || ''}","${p.age || ''}","${p.department || ''}","${p.priority || 'normal'}","${p.registeredAt || ''}","${p.calledAt || ''}","${p.completedAt || ''}","${p.consultDurationMins || ''}","${cleanNotes}"\n`;
+        const token = p.token || '';
+        const name = (p.name || '').replace(/"/g, '""');
+        const age = p.age || '';
+        const dept = (p.department || 'General OPD').replace(/"/g, '""');
+        const priority = (p.priority || 'normal').toUpperCase();
+        
+        const regTime = p.registeredAt ? new Date(p.registeredAt).toLocaleString() : '';
+        const callTime = p.calledAt ? new Date(p.calledAt).toLocaleString() : '';
+        const compTime = p.completedAt ? new Date(p.completedAt).toLocaleString() : '';
+        
+        let waitMins = '';
+        if (p.calledAt && p.registeredAt) {
+          waitMins = Math.max(0, Math.round((new Date(p.calledAt).getTime() - new Date(p.registeredAt).getTime()) / 60000));
+        }
+        
+        const duration = p.consultDurationMins || (p.calledAt && p.completedAt ? Math.max(1, Math.round((new Date(p.completedAt).getTime() - new Date(p.calledAt).getTime()) / 60000)) : 5);
+        const notes = (p.consultationNotes || p.prescription || 'Routine checkup completed.').replace(/"/g, '""').replace(/\r?\n/g, ' | ');
+
+        csv += `"${token}","${name}","${age}","${dept}","${priority}","${regTime}","${callTime}","${compTime}","${waitMins}","${duration}","${notes}"\n`;
       });
 
-      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+      const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
       const link = document.createElement('a');
       link.href = URL.createObjectURL(blob);
-      link.setAttribute('download', `hospital_queue_report_${new Date().toISOString().slice(0, 10)}.csv`);
+      link.setAttribute('download', `Hospital_Queue_Report_${new Date().toISOString().slice(0, 10)}.csv`);
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
-      showToast('Consultation CSV report downloaded!', 'success', '📥');
+      showToast('Consultation CSV report downloaded successfully!', 'success', '📥');
     });
   }
 

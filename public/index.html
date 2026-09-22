@@ -279,7 +279,23 @@
          VIEW 2: DOCTOR DASHBOARD
          ======================================================== -->
     <section id="doctorView" class="view-section">
-      <!-- Top Summary Metrics Bar -->
+      <!-- Doctor Console Top Bar -->
+      <div class="doctor-top-bar">
+        <div class="doc-badge-info">
+          <span class="doc-active-dot"></span>
+          <div>
+            <span class="doc-badge-title" id="docHeaderName">Dr. Naveen Pn</span>
+            <span class="doc-badge-sub" id="docHeaderRoom">Consultation Room 1</span>
+          </div>
+        </div>
+        <div class="doctor-top-actions">
+          <button type="button" class="btn btn-primary btn-sm btn-glow" id="btnOpenAnalytics">
+            📊 Queue Analytics &amp; Reports
+          </button>
+        </div>
+      </div>
+
+      <!-- Top Summary Metrics Bar (Balanced 4-card grid) -->
       <div class="stats-bar">
         <div class="stat-item">
           <div class="stat-num" id="statWaiting" style="color: var(--primary);">0</div>
@@ -296,11 +312,6 @@
         <div class="stat-item">
           <div class="stat-num" id="statSkipped" style="color: var(--danger);">0</div>
           <div class="stat-title">No-Shows</div>
-        </div>
-        <div class="stat-item stat-item-action">
-          <button type="button" class="btn btn-secondary btn-sm" id="btnOpenAnalytics" style="width: 100%; font-weight: 600;">
-            📊 Analytics &amp; Reports
-          </button>
         </div>
       </div>
 
@@ -682,6 +693,30 @@
             <h4>🩺 Volume Breakdown by Department</h4>
             <div class="dept-distribution-list" id="deptDistributionList">
               <!-- Dynamic Dept items inserted via JS -->
+            </div>
+          </div>
+
+          <!-- Recent Consultations & Rx Table -->
+          <div class="analytics-section">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.85rem; flex-wrap: wrap; gap: 0.5rem;">
+              <h4 style="margin: 0;">📋 Recent Patient Consultations &amp; Rx Logs</h4>
+              <span style="font-size: 0.75rem; color: var(--text-muted);" id="analyticsLogCount">Showing recent completed records</span>
+            </div>
+            <div class="analytics-table-wrap">
+              <table class="analytics-table">
+                <thead>
+                  <tr>
+                    <th>Token</th>
+                    <th>Patient Name</th>
+                    <th>Dept &amp; Priority</th>
+                    <th>Wait / Consult</th>
+                    <th>Clinical Notes / Prescription</th>
+                  </tr>
+                </thead>
+                <tbody id="analyticsTableBody">
+                  <tr><td colspan="5" style="text-align: center; color: var(--text-muted); padding: 1.5rem;">Loading records...</td></tr>
+                </tbody>
+              </table>
             </div>
           </div>
         </div>

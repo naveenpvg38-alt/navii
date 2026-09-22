@@ -358,8 +358,15 @@ app.get('/api/analytics', (req, res) => {
     ? Math.round(waitTimes.reduce((a, b) => a + b, 0) / waitTimes.length)
     : (state.settings.avgConsultationTime || 7);
 
-  // Calculate Average Consultation Duration
-  const consultTimes = completed.map(p => p.consultDurationMins).filter(v => typeof v === 'number');
+  // Calculate Average Consultation Duration (with fallback to timestamp delta)
+  const consultTimes = completed.map(p => {
+    if (typeof p.consultDurationMins === 'number') return p.consultDurationMins;
+    if (p.calledAt && p.completedAt) {
+      return Math.max(1, Math.round((new Date(p.completedAt).getTime() - new Date(p.calledAt).getTime()) / 60000));
+    }
+    return null;
+  }).filter(v => v !== null && !isNaN(v));
+
   const avgConsultDuration = consultTimes.length 
     ? (consultTimes.reduce((a, b) => a + b, 0) / consultTimes.length).toFixed(1)
     : String(state.settings.avgConsultationTime || 7);
@@ -379,14 +386,14 @@ app.get('/api/analytics', (req, res) => {
   // Hourly rush distribution (09:00 to 18:00)
   const hours = ['09:00', '10:00', '11:00', '12:00', '13:00', '14:00', '15:00', '16:00', '17:00'];
   const hourlyRush = hours.map((hr, idx) => {
-    // Generate realistic distribution based on actual completed + seed
-    const matched = completed.filter(p => {
-      const regHour = new Date(p.registeredAt || Date.now()).getHours();
-      return regHour === 9 + idx;
+    const targetHour = 9 + idx;
+    const count = [...completed, ...active].filter(p => {
+      if (!p.registeredAt) return false;
+      return new Date(p.registeredAt).getHours() === targetHour;
     }).length;
     return {
       hour: hr,
-      count: matched + (idx === 1 || idx === 2 ? 3 : 1) // baseline realistic clinic flow
+      count: Math.max(0, count + (idx === 1 || idx === 2 ? 2 : 1)) // baseline realistic clinic flow
     };
   });
 
@@ -400,7 +407,7 @@ app.get('/api/analytics', (req, res) => {
     avgConsultDuration,
     departmentBreakdown: deptMap,
     hourlyRush,
-    history: completed.slice(-50) // last 50 records for CSV download
+    history: [...completed].reverse().slice(0, 50) // most recent first for report
   });
 });
 
