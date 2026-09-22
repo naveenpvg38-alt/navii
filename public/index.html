@@ -406,39 +406,107 @@
     </section>
 
     <!-- ========================================================
-         VIEW 3: PUBLIC TV / WAITING ROOM DISPLAY
+         VIEW 3: PUBLIC TV / WAITING ROOM DISPLAY (RE-ENGINEERED)
          ======================================================== -->
     <section id="displayView" class="view-section">
-      <div class="display-wrapper">
-        <div class="display-header">
-          <div class="display-title">
-            <h2 id="tvClinicTitle">HealthFirst Medical Centre</h2>
-            <p>Waiting Hall Public Display</p>
+      <div class="tv-screen-container" id="tvScreenContainer">
+        <!-- Top High-Tech Header -->
+        <div class="tv-top-bar">
+          <div class="tv-brand">
+            <div class="tv-brand-icon">➕</div>
+            <div>
+              <h2 id="tvClinicTitle">HealthFirst Medical Centre</h2>
+              <div class="tv-doctor-badge">
+                <span class="tv-pulse-green"></span>
+                <span id="tvDoctorName">Dr. Naveen Pn</span> • <span id="tvDoctorRoom">Consultation Room 1</span>
+              </div>
+            </div>
           </div>
-          <div class="display-clock" id="tvDigitalClock">11:30:00 AM</div>
+
+          <div class="tv-meta-right">
+            <div class="tv-date-time">
+              <div class="tv-live-date" id="tvLiveDate">Tuesday, 22 September</div>
+              <div class="tv-clock" id="tvDigitalClock">11:30:00 AM</div>
+            </div>
+            <button type="button" class="tv-btn-fullscreen" id="tvFullscreenBtn" title="Toggle Fullscreen Mode">
+              ⛶ Fullscreen
+            </button>
+          </div>
         </div>
 
-        <div class="display-grid">
-          <!-- Hero Currently Serving Box -->
-          <div class="display-hero-box pulse-glow">
-            <div class="display-hero-label">NOW SERVING</div>
-            <div class="display-hero-token" id="tvHeroToken">---</div>
-            <div class="display-hero-room" id="tvHeroRoom">Consultation Room 1</div>
-            <div class="display-hero-patient" id="tvHeroPatient">Waiting for next patient</div>
+        <!-- Main TV Multi-Zone Grid -->
+        <div class="tv-main-grid">
+          
+          <!-- LEFT HERO ZONE: Giant Active Token Display -->
+          <div class="tv-hero-zone" id="tvHeroZone">
+            <div class="tv-zone-header">
+              <span class="tv-live-tag">
+                <span class="radar-beacon"></span>
+                NOW CALLING / CURRENT CONSULTATION
+              </span>
+              <span class="tv-chime-status">🔊 Audio Enabled</span>
+            </div>
+
+            <div class="tv-token-display-box">
+              <div class="tv-token-number" id="tvHeroToken">---</div>
+              
+              <div class="tv-patient-details-card">
+                <div class="tv-patient-meta">
+                  <span class="tv-label">PATIENT NAME</span>
+                  <div class="tv-patient-name" id="tvHeroPatient">Waiting for next patient</div>
+                </div>
+                <div class="tv-patient-dept">
+                  <span class="tv-label">DEPARTMENT</span>
+                  <div class="tv-dept-tag" id="tvHeroDept">General Medicine</div>
+                </div>
+              </div>
+
+              <!-- Direction Callout Banner -->
+              <div class="tv-direction-banner" id="tvDirectionBanner">
+                <span class="tv-direction-arrow">👉</span>
+                <span class="tv-direction-text">PLEASE PROCEED TO <strong id="tvHeroRoom">ROOM 1</strong></span>
+              </div>
+            </div>
           </div>
 
-          <!-- Upcoming Tokens List -->
-          <div class="display-upcoming-box">
-            <h3>UPCOMING TOKENS</h3>
-            <div id="tvUpcomingList">
-              <div style="color: #64748b; padding: 2rem 0; text-align: center;">Queue is currently empty</div>
+          <!-- RIGHT DUAL ZONE: Next in Line + Recently Served -->
+          <div class="tv-side-zone">
+            
+            <!-- Zone 2A: Upcoming Tokens Queue -->
+            <div class="tv-panel tv-panel-upcoming">
+              <div class="tv-panel-header">
+                <h3>⏳ NEXT IN LINE (UPCOMING)</h3>
+                <span class="tv-badge" id="tvWaitingCountBadge">0 Waiting</span>
+              </div>
+              <div class="tv-upcoming-list" id="tvUpcomingList">
+                <div class="tv-empty-text">Queue is currently empty</div>
+              </div>
+            </div>
+
+            <!-- Zone 2B: Recently Served / Completed -->
+            <div class="tv-panel tv-panel-recent">
+              <div class="tv-panel-header">
+                <h3>✅ RECENTLY SERVED</h3>
+                <span class="tv-panel-subtitle">Last 3 Consultations</span>
+              </div>
+              <div class="tv-recent-list" id="tvRecentList">
+                <div class="tv-empty-text">No previous calls</div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- BOTTOM LIVE TICKER (Clinic Guidance & Health Tips) -->
+        <div class="tv-ticker-bar">
+          <div class="tv-ticker-label">ANNOUNCEMENTS</div>
+          <div class="tv-ticker-track">
+            <div class="tv-ticker-content">
+              🏥 Welcome to HealthFirst Medical Centre • Please keep your digital token ready • Audio announcements will chime when your token is called • Average consultation time is ~7 minutes • For emergency assistance, please notify the front triage desk immediately.
             </div>
           </div>
         </div>
 
-        <div style="margin-top: 1.5rem; text-align: center; font-size: 0.85rem; color: #64748b; border-top: 1px solid rgba(255,255,255,0.08); padding-top: 1rem;">
-          🔊 Audio announcements are enabled • Please proceed promptly when your token is called
-        </div>
       </div>
     </section>
 

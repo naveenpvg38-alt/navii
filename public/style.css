@@ -1469,121 +1469,453 @@ input:focus, select:focus {
   padding: 1.85rem;
 }
 
-.display-header {
+/* ========================================================
+   PUBLIC TV DISPLAY VIEW (RE-ENGINEERED DIGITAL SIGNAGE)
+   ======================================================== */
+.tv-screen-container {
+  background: radial-gradient(circle at 20% 20%, #0d1b38 0%, #060b17 100%);
+  border: 2px solid rgba(56, 189, 248, 0.25);
+  border-radius: 28px;
+  overflow: hidden;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.7), 0 0 35px rgba(56, 189, 248, 0.12);
+  padding: 1.8rem;
+  color: #ffffff;
+  position: relative;
+  transition: all 0.3s ease;
+}
+
+/* Fullscreen mode support */
+.tv-screen-container.tv-fullscreen-active {
+  position: fixed;
+  inset: 0;
+  width: 100vw;
+  height: 100vh;
+  border-radius: 0;
+  border: none;
+  z-index: 99999;
+  padding: 2rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+/* Top Bar */
+.tv-top-bar {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-  padding-bottom: 1.1rem;
-  margin-bottom: 1.6rem;
+  border-bottom: 2px solid rgba(56, 189, 248, 0.2);
+  padding-bottom: 1.2rem;
+  margin-bottom: 1.5rem;
+  gap: 1rem;
+  flex-wrap: wrap;
 }
 
-.display-title h2 {
-  font-size: 1.75rem;
-  font-weight: 900;
-  color: #38bdf8;
+.tv-brand {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
 }
 
-.display-title p {
-  color: #94a3b8;
+.tv-brand-icon {
+  width: 48px;
+  height: 48px;
+  background: linear-gradient(135deg, #0284c7, #38bdf8);
+  border-radius: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.6rem;
+  color: white;
+  box-shadow: 0 4px 14px rgba(2, 132, 199, 0.5);
+}
+
+.tv-brand h2 {
+  font-size: 1.65rem;
+  font-weight: 800;
+  color: #f8fafc;
+  letter-spacing: -0.3px;
+  line-height: 1.2;
+}
+
+.tv-doctor-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
   font-size: 0.88rem;
+  font-weight: 700;
+  color: #38bdf8;
+  margin-top: 0.2rem;
 }
 
-.display-clock {
-  font-size: 1.7rem;
+.tv-pulse-green {
+  width: 9px;
+  height: 9px;
+  background-color: #10b981;
+  border-radius: 50%;
+  animation: pulse-dot 2s infinite;
+}
+
+.tv-meta-right {
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+}
+
+.tv-date-time {
+  text-align: right;
+}
+
+.tv-live-date {
+  font-size: 0.85rem;
+  color: #94a3b8;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.tv-clock {
+  font-size: 1.8rem;
   font-weight: 900;
-  color: #f1f5f9;
+  color: #ffffff;
+  letter-spacing: 1px;
+  text-shadow: 0 2px 10px rgba(56, 189, 248, 0.4);
 }
 
-.display-grid {
+.tv-btn-fullscreen {
+  background: rgba(56, 189, 248, 0.15);
+  border: 1.5px solid rgba(56, 189, 248, 0.4);
+  color: #38bdf8;
+  font-weight: 800;
+  font-family: var(--font-sans);
+  font-size: 0.85rem;
+  padding: 0.55rem 1rem;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.tv-btn-fullscreen:hover {
+  background: rgba(56, 189, 248, 0.25);
+  transform: scale(1.05);
+}
+
+/* TV Main Grid (Hero Left + Dual Side Right) */
+.tv-main-grid {
   display: grid;
-  grid-template-columns: 1.2fr 0.8fr;
-  gap: 1.6rem;
+  grid-template-columns: 1.25fr 0.85fr;
+  gap: 1.5rem;
+  margin-bottom: 1.5rem;
 }
 
-@media (max-width: 800px) {
-  .display-grid {
+@media (max-width: 880px) {
+  .tv-main-grid {
     grid-template-columns: 1fr;
   }
 }
 
-.display-hero-box {
-  background: linear-gradient(135deg, #0c162e, #142145);
-  border: 3px solid #10b981;
-  border-radius: 22px;
-  padding: 2.5rem 2rem;
-  text-align: center;
+/* Left Hero Zone */
+.tv-hero-zone {
+  background: linear-gradient(135deg, rgba(15, 27, 54, 0.9), rgba(10, 18, 38, 0.95));
+  border: 2px solid rgba(16, 185, 129, 0.4);
+  border-radius: 24px;
+  padding: 1.8rem;
+  box-shadow: 0 0 35px rgba(16, 185, 129, 0.15);
   display: flex;
   flex-direction: column;
-  justify-content: center;
+  justify-content: space-between;
 }
 
-.display-hero-label {
-  font-size: 1.25rem;
-  font-weight: 900;
-  color: #34d399;
-  text-transform: uppercase;
-  letter-spacing: 2.5px;
-}
-
-.display-hero-token {
-  font-size: 5.4rem;
-  font-weight: 900;
-  color: #ffffff;
-  letter-spacing: 3px;
-  line-height: 1.1;
-  margin: 0.75rem 0;
-  text-shadow: 0 4px 16px rgba(0, 0, 0, 0.65);
-}
-
-.display-hero-room {
-  font-size: 1.85rem;
-  font-weight: 800;
-  color: #38bdf8;
-  margin-top: 0.5rem;
-}
-
-.display-hero-patient {
-  font-size: 1.2rem;
-  font-weight: 600;
-  color: #cbd5e1;
-  margin-top: 0.35rem;
-}
-
-.display-upcoming-box {
-  background: #0c162e;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 22px;
-  padding: 1.35rem;
-}
-
-.display-upcoming-box h3 {
-  font-size: 1.15rem;
-  font-weight: 800;
-  color: #cbd5e1;
-  margin-bottom: 1.1rem;
-  padding-bottom: 0.6rem;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-}
-
-.upcoming-item {
+.tv-zone-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0.95rem;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  padding-bottom: 0.85rem;
+  margin-bottom: 1rem;
 }
 
-.upcoming-token {
-  font-size: 1.45rem;
+.tv-live-tag {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  color: #34d399;
+  font-size: 0.88rem;
+  font-weight: 800;
+  letter-spacing: 1px;
+}
+
+.tv-chime-status {
+  font-size: 0.8rem;
+  color: #94a3b8;
+  font-weight: 600;
+}
+
+.tv-token-display-box {
+  text-align: center;
+  padding: 1rem 0;
+}
+
+.tv-token-number {
+  font-size: 6.2rem;
+  font-weight: 900;
+  color: #ffffff;
+  letter-spacing: 4px;
+  line-height: 1;
+  margin: 0.5rem 0 1.25rem 0;
+  text-shadow: 0 4px 20px rgba(56, 189, 248, 0.6);
+  filter: drop-shadow(0 0 25px rgba(56, 189, 248, 0.35));
+}
+
+@media (max-width: 768px) {
+  .tv-token-number {
+    font-size: 4.2rem;
+  }
+}
+
+.tv-patient-details-card {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 16px;
+  padding: 1rem 1.4rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1.25rem;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.tv-label {
+  display: block;
+  font-size: 0.68rem;
+  font-weight: 800;
+  color: #94a3b8;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+
+.tv-patient-name {
+  font-size: 1.35rem;
+  font-weight: 800;
+  color: #f8fafc;
+}
+
+.tv-dept-tag {
+  background: rgba(56, 189, 248, 0.2);
+  color: #38bdf8;
+  border: 1px solid rgba(56, 189, 248, 0.35);
+  font-size: 0.85rem;
+  font-weight: 700;
+  padding: 0.3rem 0.85rem;
+  border-radius: 9999px;
+  margin-top: 0.2rem;
+}
+
+.tv-direction-banner {
+  background: linear-gradient(90deg, #10b981, #059669);
+  color: white;
+  border-radius: 14px;
+  padding: 0.9rem 1.4rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  box-shadow: 0 8px 18px rgba(16, 185, 129, 0.35);
+}
+
+.tv-direction-arrow {
+  font-size: 1.5rem;
+  animation: bounceRight 1.5s infinite;
+}
+
+@keyframes bounceRight {
+  0%, 100% { transform: translateX(0); }
+  50% { transform: translateX(6px); }
+}
+
+.tv-direction-text {
+  font-size: 1.05rem;
+  font-weight: 800;
+  letter-spacing: 0.5px;
+}
+
+/* Right Side Panels */
+.tv-side-zone {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.tv-panel {
+  background: rgba(13, 23, 46, 0.85);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 20px;
+  padding: 1.25rem;
+}
+
+.tv-panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  padding-bottom: 0.65rem;
+  margin-bottom: 0.85rem;
+}
+
+.tv-panel-header h3 {
+  font-size: 0.98rem;
+  font-weight: 800;
+  color: #cbd5e1;
+  letter-spacing: 0.5px;
+}
+
+.tv-badge {
+  background: rgba(56, 189, 248, 0.2);
+  color: #38bdf8;
+  font-size: 0.72rem;
+  font-weight: 800;
+  padding: 0.18rem 0.55rem;
+  border-radius: 9999px;
+}
+
+.tv-panel-subtitle {
+  font-size: 0.75rem;
+  color: #94a3b8;
+  font-weight: 600;
+}
+
+.tv-upcoming-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.75rem 0.85rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+  transition: background 0.2s;
+  border-radius: 10px;
+}
+
+.tv-upcoming-item:hover {
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.tv-item-left {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.tv-rank-pill {
+  width: 24px;
+  height: 24px;
+  background: rgba(255, 255, 255, 0.08);
+  color: #94a3b8;
+  border-radius: 50%;
+  font-size: 0.75rem;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.tv-item-token {
+  font-family: var(--font-mono);
+  font-size: 1.35rem;
   font-weight: 800;
   color: #38bdf8;
 }
 
-.upcoming-wait {
+.tv-item-name {
   font-size: 0.88rem;
   font-weight: 600;
+  color: #cbd5e1;
+}
+
+.tv-item-wait {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: #34d399;
+  background: rgba(16, 185, 129, 0.15);
+  padding: 0.2rem 0.55rem;
+  border-radius: 6px;
+}
+
+.tv-recent-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.55rem 0.85rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+}
+
+.tv-recent-token {
+  font-family: var(--font-mono);
+  font-size: 1.15rem;
+  font-weight: 800;
   color: #94a3b8;
+}
+
+.tv-served-badge {
+  font-size: 0.72rem;
+  font-weight: 800;
+  color: #34d399;
+  background: rgba(16, 185, 129, 0.12);
+  padding: 0.18rem 0.55rem;
+  border-radius: 9999px;
+}
+
+.tv-empty-text {
+  color: #64748b;
+  padding: 1.5rem 0;
+  text-align: center;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+/* Bottom Continuous Marquee Ticker */
+.tv-ticker-bar {
+  background: rgba(6, 11, 23, 0.85);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 14px;
+  display: flex;
+  align-items: center;
+  overflow: hidden;
+  height: 44px;
+}
+
+.tv-ticker-label {
+  background: #0284c7;
+  color: white;
+  font-size: 0.75rem;
+  font-weight: 900;
+  padding: 0 1rem;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  letter-spacing: 0.5px;
+  white-space: nowrap;
+}
+
+.tv-ticker-track {
+  flex: 1;
+  overflow: hidden;
+  position: relative;
+  white-space: nowrap;
+}
+
+.tv-ticker-content {
+  display: inline-block;
+  white-space: nowrap;
+  padding-left: 100%;
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: #cbd5e1;
+  animation: marqueeScroll 30s linear infinite;
+}
+
+@keyframes marqueeScroll {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-100%); }
 }
 
 /* ========================================================

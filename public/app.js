@@ -119,12 +119,20 @@
 
     // Public TV View
     displayView: document.getElementById('displayView'),
+    tvScreenContainer: document.getElementById('tvScreenContainer'),
     tvClinicTitle: document.getElementById('tvClinicTitle'),
+    tvDoctorName: document.getElementById('tvDoctorName'),
+    tvDoctorRoom: document.getElementById('tvDoctorRoom'),
+    tvLiveDate: document.getElementById('tvLiveDate'),
     tvDigitalClock: document.getElementById('tvDigitalClock'),
+    tvFullscreenBtn: document.getElementById('tvFullscreenBtn'),
     tvHeroToken: document.getElementById('tvHeroToken'),
     tvHeroRoom: document.getElementById('tvHeroRoom'),
     tvHeroPatient: document.getElementById('tvHeroPatient'),
-    tvUpcomingList: document.getElementById('tvUpcomingList')
+    tvHeroDept: document.getElementById('tvHeroDept'),
+    tvWaitingCountBadge: document.getElementById('tvWaitingCountBadge'),
+    tvUpcomingList: document.getElementById('tvUpcomingList'),
+    tvRecentList: document.getElementById('tvRecentList')
   };
 
   /* ========================================================
@@ -595,30 +603,68 @@
   /* --------------------------------------------------------
      RENDER: PUBLIC TV DISPLAY
      -------------------------------------------------------- */
+  /* --------------------------------------------------------
+     RENDER: PUBLIC TV DISPLAY (RE-ENGINEERED)
+     -------------------------------------------------------- */
   function renderPublicDisplay() {
-    if (queueState.currentPatient) {
-      dom.tvHeroToken.textContent = queueState.currentPatient.token;
-      dom.tvHeroRoom.textContent = queueState.settings.roomNumber || 'Consultation Room 1';
-      dom.tvHeroPatient.textContent = `Patient: ${queueState.currentPatient.name}`;
-    } else {
-      dom.tvHeroToken.textContent = '---';
-      dom.tvHeroRoom.textContent = queueState.settings.roomNumber || 'Consultation Room 1';
-      dom.tvHeroPatient.textContent = 'Waiting for next patient';
+    if (queueState.settings) {
+      if (dom.tvClinicTitle) dom.tvClinicTitle.textContent = queueState.settings.clinicName || 'HealthFirst Medical Centre';
+      if (dom.tvDoctorName) dom.tvDoctorName.textContent = queueState.settings.doctorName || 'Dr. Naveen Pn';
+      if (dom.tvDoctorRoom) dom.tvDoctorRoom.textContent = queueState.settings.roomNumber || 'Consultation Room 1';
     }
 
+    if (queueState.currentPatient) {
+      const cp = queueState.currentPatient;
+      dom.tvHeroToken.textContent = cp.token;
+      dom.tvHeroRoom.textContent = queueState.settings.roomNumber ? queueState.settings.roomNumber.toUpperCase() : 'ROOM 1';
+      dom.tvHeroPatient.textContent = cp.name;
+      if (dom.tvHeroDept) dom.tvHeroDept.textContent = cp.department || 'General Medicine';
+    } else {
+      dom.tvHeroToken.textContent = '---';
+      dom.tvHeroRoom.textContent = queueState.settings.roomNumber ? queueState.settings.roomNumber.toUpperCase() : 'ROOM 1';
+      dom.tvHeroPatient.textContent = 'Waiting for next patient';
+      if (dom.tvHeroDept) dom.tvHeroDept.textContent = 'Ready';
+    }
+
+    if (dom.tvWaitingCountBadge) {
+      dom.tvWaitingCountBadge.textContent = `${queueState.activeQueue.length} Waiting`;
+    }
+
+    // Render Next in Line (Upcoming Tokens)
     if (queueState.activeQueue.length === 0) {
-      dom.tvUpcomingList.innerHTML = '<div style="color: #64748b; padding: 2rem 0; text-align: center;">Queue is currently empty</div>';
+      dom.tvUpcomingList.innerHTML = '<div class="tv-empty-text">Queue is currently empty</div>';
     } else {
       const upcoming = queueState.activeQueue.slice(0, 4);
-      dom.tvUpcomingList.innerHTML = upcoming.map((p) => `
-        <div class="upcoming-item">
-          <div>
-            <span class="upcoming-token">${p.token}</span>
-            <span style="color: #cbd5e1; margin-left: 0.75rem; font-size: 0.95rem;">${escapeHtml(p.name)}</span>
+      dom.tvUpcomingList.innerHTML = upcoming.map((p, idx) => `
+        <div class="tv-upcoming-item">
+          <div class="tv-item-left">
+            <span class="tv-rank-pill">#${idx + 1}</span>
+            <div>
+              <div class="tv-item-token">${p.token}</div>
+              <div class="tv-item-name">${escapeHtml(p.name)}</div>
+            </div>
           </div>
-          <div class="upcoming-wait">~${p.estimatedWaitTime} mins</div>
+          <div class="tv-item-wait">~${p.estimatedWaitTime} min</div>
         </div>
       `).join('');
+    }
+
+    // Render Recently Served Tokens (Up to 3)
+    if (dom.tvRecentList) {
+      if (queueState.completedPatients.length === 0) {
+        dom.tvRecentList.innerHTML = '<div class="tv-empty-text">No previous calls yet</div>';
+      } else {
+        const recent = [...queueState.completedPatients].reverse().slice(0, 3);
+        dom.tvRecentList.innerHTML = recent.map(p => `
+          <div class="tv-recent-item">
+            <div style="display: flex; align-items: center; gap: 0.6rem;">
+              <span class="tv-recent-token">${p.token}</span>
+              <span style="font-size: 0.85rem; color: #cbd5e1;">${escapeHtml(p.name)}</span>
+            </div>
+            <span class="tv-served-badge">✓ Served</span>
+          </div>
+        `).join('');
+      }
     }
   }
 
@@ -650,10 +696,47 @@
   function initDigitalClock() {
     function tick() {
       const now = new Date();
-      dom.tvDigitalClock.textContent = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+      if (dom.tvDigitalClock) {
+        dom.tvDigitalClock.textContent = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+      }
+      if (dom.tvLiveDate) {
+        dom.tvLiveDate.textContent = now.toLocaleDateString([], { weekday: 'long', day: 'numeric', month: 'long' });
+      }
     }
     tick();
     clockInterval = setInterval(tick, 1000);
+  }
+
+  // Fullscreen Button Listener
+  if (dom.tvFullscreenBtn) {
+    dom.tvFullscreenBtn.addEventListener('click', () => {
+      triggerHaptic(20);
+      const container = dom.tvScreenContainer;
+      if (!container) return;
+
+      if (!document.fullscreenElement) {
+        if (container.requestFullscreen) {
+          container.requestFullscreen();
+        } else if (container.webkitRequestFullscreen) {
+          container.webkitRequestFullscreen();
+        }
+        container.classList.add('tv-fullscreen-active');
+        dom.tvFullscreenBtn.textContent = '✕ Exit Fullscreen';
+      } else {
+        if (document.exitFullscreen) {
+          document.exitFullscreen();
+        }
+        container.classList.remove('tv-fullscreen-active');
+        dom.tvFullscreenBtn.textContent = '⛶ Fullscreen';
+      }
+    });
+
+    document.addEventListener('fullscreenchange', () => {
+      if (!document.fullscreenElement && dom.tvScreenContainer) {
+        dom.tvScreenContainer.classList.remove('tv-fullscreen-active');
+        dom.tvFullscreenBtn.textContent = '⛶ Fullscreen';
+      }
+    });
   }
 
   /* ========================================================
