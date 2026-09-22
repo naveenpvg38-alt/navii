@@ -1,0 +1,16 @@
+{
+  "name": "hospital-queue-management-system",
+  "version": "1.0.0",
+  "description": "Lightweight, mobile-friendly Hospital Queue Management System with real-time sync",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "keywords": ["hospital", "queue", "real-time", "healthcare"],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "express": "^4.21.2",
+    "ws": "^8.18.0"
+  }
+}

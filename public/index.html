@@ -1,0 +1,461 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+  <meta name="theme-color" content="#0284c7" />
+  <title>Hospital Queue Management System</title>
+  <link rel="stylesheet" href="style.css" />
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🏥</text></svg>">
+</head>
+<body>
+
+  <!-- ========================================================
+       ANIMATED MEDICAL SPLASH SCREEN
+       ======================================================== -->
+  <div id="splashScreen" class="splash-screen">
+    <div class="splash-content">
+      <div class="splash-logo-wrap">
+        <div class="splash-pulse-ring"></div>
+        <div class="splash-pulse-ring delay"></div>
+        <div class="splash-icon">➕</div>
+      </div>
+      <h1 class="splash-title">HealthFirst</h1>
+      <p class="splash-subtitle">Dr. Naveen Pn • Smart Queue System</p>
+      <div class="splash-ecg-wrap">
+        <svg class="splash-ecg" viewBox="0 0 100 24">
+          <polyline points="0,12 30,12 36,3 42,21 48,6 54,15 60,12 100,12" />
+        </svg>
+      </div>
+      <div class="splash-progress">
+        <div class="splash-progress-bar"></div>
+      </div>
+      <span class="splash-status-text" id="splashStatusText">Initializing Live System...</span>
+    </div>
+  </div>
+
+  <!-- Confetti Canvas for Celebrations -->
+  <canvas id="confettiCanvas" class="confetti-canvas"></canvas>
+
+  <!-- Live Toast Notification Container -->
+  <div id="toastContainer" class="toast-container" aria-live="polite"></div>
+
+  <!-- Top Navigation Header (Desktop / Tablet) -->
+  <header class="app-header">
+    <div class="header-container">
+      <div class="logo-section">
+        <div class="logo-icon ripple-trigger">➕</div>
+        <div class="clinic-title">
+          <h1 id="headerClinicName">HealthFirst Medical Centre</h1>
+          <p id="headerDoctorSubtitle">Dr. Naveen Pn • Consultation Room 1</p>
+        </div>
+      </div>
+
+      <!-- Real-Time Sync Indicator -->
+      <div class="sync-badge" id="syncBadge">
+        <span class="sync-dot"></span>
+        <span id="syncText">Live Synced</span>
+      </div>
+
+      <!-- Desktop View Navigation Tabs -->
+      <nav class="view-tabs desktop-only" role="tablist">
+        <button class="tab-btn active" data-view="patient" id="tabPatient">
+          🩺 Patient View
+        </button>
+        <button class="tab-btn" data-view="doctor" id="tabDoctor">
+          👨‍⚕️ Doctor Console
+        </button>
+        <button class="tab-btn" data-view="display" id="tabDisplay">
+          📺 Public TV Display
+        </button>
+      </nav>
+    </div>
+  </header>
+
+  <!-- Main Application Content -->
+  <main class="app-main">
+
+    <!-- ========================================================
+         VIEW 1: PATIENT VIEW (Registration & Live Token Status)
+         ======================================================== -->
+    <section id="patientView" class="view-section active-view">
+      <div class="patient-container">
+
+        <!-- Turn Announcement Banner (appears with pulse when called) -->
+        <div id="callAlertBanner" class="call-alert-banner">
+          <div class="call-alert-header">
+            <span class="radar-beacon"></span>
+            <h3>🔔 IT'S YOUR TURN!</h3>
+          </div>
+          <p>Please proceed to <strong id="callAlertRoom">Consultation Room 1</strong> immediately.</p>
+        </div>
+
+        <!-- 1A: Patient Registration Card -->
+        <div class="card card-interactive" id="patientRegCard">
+          <div class="card-header">
+            <span class="card-tag">Fast Self Check-in</span>
+            <h2>Get Your Queue Token</h2>
+            <p>Takes under 20 seconds • Get real-time queue position on your phone</p>
+          </div>
+
+          <form id="patientRegForm">
+            <div class="form-group">
+              <label for="regName">Full Name <span class="required-star">*</span></label>
+              <input type="text" id="regName" placeholder="e.g. John Doe" required autocomplete="name" />
+            </div>
+
+            <!-- Quick Department Tap Chips -->
+            <div class="form-group">
+              <label>Select Department</label>
+              <div class="dept-chips-grid" id="deptChipsGrid">
+                <button type="button" class="dept-chip active" data-dept="General OPD">🩺 General OPD</button>
+                <button type="button" class="dept-chip" data-dept="Pediatrics">👶 Pediatrics</button>
+                <button type="button" class="dept-chip" data-dept="Orthopedics">🦴 Orthopedics</button>
+                <button type="button" class="dept-chip" data-dept="Cardiology">❤️ Cardiology</button>
+                <button type="button" class="dept-chip" data-dept="Dental">🦷 Dental</button>
+              </div>
+              <input type="hidden" id="regDept" value="General OPD" />
+            </div>
+
+            <div class="form-row">
+              <div class="form-group">
+                <label for="regAge">Age (Optional)</label>
+                <input type="number" id="regAge" placeholder="e.g. 34" min="1" max="120" inputmode="numeric" />
+              </div>
+              <div class="form-group">
+                <label for="regReason">Reason for Visit (Optional)</label>
+                <input type="text" id="regReason" placeholder="e.g. Fever, Checkup" />
+              </div>
+            </div>
+
+            <button type="submit" class="btn btn-primary btn-lg btn-glow" id="btnSubmitReg">
+              <span class="btn-icon">🎟️</span>
+              <span class="btn-text">Issue Digital Token</span>
+            </button>
+          </form>
+
+          <!-- Existing Token Lookup Bar -->
+          <div class="token-lookup-bar">
+            <p>Already registered on another screen?</p>
+            <div class="lookup-input-group">
+              <input type="text" id="lookupTokenInput" placeholder="Enter Token (e.g. A-001)" style="text-transform: uppercase;" />
+              <button type="button" class="btn btn-secondary btn-sm" id="btnLookupToken">Track</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- 1B: Live Patient Digital Boarding Pass Ticket Card -->
+        <div class="card ticket-card ticket-pass" id="patientStatusCard" style="display: none;">
+          <!-- Decorative Ticket Cutouts -->
+          <div class="ticket-cutout ticket-cutout-left"></div>
+          <div class="ticket-cutout ticket-cutout-right"></div>
+
+          <div class="ticket-header">
+            <div class="ticket-status-pill status-waiting" id="ticketStatusBadge">Waiting in Queue</div>
+            <div class="token-hero-wrap">
+              <div class="token-hero" id="ticketTokenNumber">A-001</div>
+              <button type="button" class="btn-copy-token" id="btnCopyToken" title="Copy Token Number">
+                📋
+              </button>
+            </div>
+            <div class="patient-identity" id="ticketPatientName">John Doe</div>
+            <p class="ticket-meta" id="ticketMeta">General OPD • Position #1</p>
+          </div>
+
+          <!-- Visual Queue Progress Track -->
+          <div class="queue-progress-box">
+            <div class="progress-bar-bg">
+              <div class="progress-bar-fill" id="ticketProgressBar" style="width: 25%;"></div>
+            </div>
+            <div class="progress-text-row">
+              <span id="ticketQueuePosSummary">Queue Status</span>
+              <span id="ticketEstimatedWaitShort">~7 min</span>
+            </div>
+          </div>
+
+          <!-- Live Metrics Grid -->
+          <div class="metrics-grid">
+            <div class="metric-box metric-interactive">
+              <div class="metric-value" id="ticketPeopleAhead">0</div>
+              <div class="metric-label">People Ahead</div>
+            </div>
+            <div class="metric-box metric-interactive">
+              <div class="metric-value time-accent" id="ticketEstimatedWait">~0 min</div>
+              <div class="metric-label">Estimated Wait</div>
+            </div>
+          </div>
+
+          <!-- Barcode Graphic (Boarding Pass Aesthetic) -->
+          <div class="ticket-barcode-wrap">
+            <svg class="ticket-barcode" viewBox="0 0 160 30">
+              <rect x="0" y="0" width="3" height="30" fill="#334155"/>
+              <rect x="5" y="0" width="1.5" height="30" fill="#334155"/>
+              <rect x="9" y="0" width="4" height="30" fill="#334155"/>
+              <rect x="16" y="0" width="2" height="30" fill="#334155"/>
+              <rect x="20" y="0" width="5" height="30" fill="#334155"/>
+              <rect x="28" y="0" width="2" height="30" fill="#334155"/>
+              <rect x="33" y="0" width="3" height="30" fill="#334155"/>
+              <rect x="39" y="0" width="1.5" height="30" fill="#334155"/>
+              <rect x="44" y="0" width="4.5" height="30" fill="#334155"/>
+              <rect x="52" y="0" width="2" height="30" fill="#334155"/>
+              <rect x="57" y="0" width="3.5" height="30" fill="#334155"/>
+              <rect x="63" y="0" width="1.5" height="30" fill="#334155"/>
+              <rect x="68" y="0" width="5" height="30" fill="#334155"/>
+              <rect x="76" y="0" width="2" height="30" fill="#334155"/>
+              <rect x="81" y="0" width="4" height="30" fill="#334155"/>
+              <rect x="88" y="0" width="2" height="30" fill="#334155"/>
+              <rect x="93" y="0" width="3" height="30" fill="#334155"/>
+              <rect x="99" y="0" width="1.5" height="30" fill="#334155"/>
+              <rect x="103" y="0" width="4.5" height="30" fill="#334155"/>
+              <rect x="110" y="0" width="2" height="30" fill="#334155"/>
+              <rect x="115" y="0" width="3" height="30" fill="#334155"/>
+              <rect x="121" y="0" width="1.5" height="30" fill="#334155"/>
+              <rect x="126" y="0" width="4.5" height="30" fill="#334155"/>
+              <rect x="133" y="0" width="2" height="30" fill="#334155"/>
+              <rect x="138" y="0" width="3" height="30" fill="#334155"/>
+              <rect x="144" y="0" width="2" height="30" fill="#334155"/>
+              <rect x="149" y="0" width="4" height="30" fill="#334155"/>
+              <rect x="156" y="0" width="2" height="30" fill="#334155"/>
+            </svg>
+            <span class="barcode-subtext">HEALTHFIRST SMART TOKEN</span>
+          </div>
+
+          <!-- Current Now Serving Banner for context -->
+          <div class="now-serving-badge-strip">
+            <span>Now with Doctor: </span>
+            <strong id="ticketNowServingInfo">None</strong>
+          </div>
+
+          <!-- Footer Actions -->
+          <div class="ticket-footer-actions">
+            <button type="button" class="btn btn-secondary" id="btnNewToken">
+              ➕ Register Another Patient
+            </button>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ========================================================
+         VIEW 2: DOCTOR DASHBOARD
+         ======================================================== -->
+    <section id="doctorView" class="view-section">
+      <!-- Top Summary Metrics Bar -->
+      <div class="stats-bar">
+        <div class="stat-item">
+          <div class="stat-num" id="statWaiting" style="color: var(--primary);">0</div>
+          <div class="stat-title">Waiting Patients</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-num" id="statServing" style="color: var(--success);">-</div>
+          <div class="stat-title">Now Serving</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-num" id="statCompleted" style="color: #64748b;">0</div>
+          <div class="stat-title">Completed Today</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-num" id="statSkipped" style="color: var(--danger);">0</div>
+          <div class="stat-title">No-Shows</div>
+        </div>
+      </div>
+
+      <div class="doctor-layout">
+        <!-- Left Main Panel: Active Patient & Queue -->
+        <div class="doctor-main-col">
+
+          <!-- Active Serving Card -->
+          <div class="serving-box">
+            <span class="serving-badge-tag">NOW IN CONSULTATION</span>
+            
+            <div id="servingEmptyState" class="serving-content-empty">
+              <div class="empty-icon">🩺</div>
+              <h4>No Patient Currently In Consultation</h4>
+              <p>Click "Call Next Patient" to advance the queue.</p>
+            </div>
+
+            <div id="servingActiveState" class="serving-content-active" style="display: none;">
+              <div class="active-patient-info">
+                <div class="active-token-lg pulse-glow" id="docCurrentToken">A-001</div>
+                <div class="active-meta">
+                  <h3 id="docCurrentName">Jane Doe</h3>
+                  <p id="docCurrentDetails">Age: 28 • Fever / General OPD</p>
+                  <span class="consult-timer" id="docConsultTimer">⏱️ Consultation: 00:00</span>
+                </div>
+              </div>
+
+              <!-- In-Room Consultation Action Buttons -->
+              <div class="serving-actions">
+                <button type="button" class="btn btn-success btn-sm" id="btnDocComplete" title="Mark patient as completed">
+                  ✅ Complete
+                </button>
+                <button type="button" class="btn btn-warning btn-sm" id="btnDocRecall" title="Re-announce chime and room number">
+                  📢 Re-Announce
+                </button>
+                <button type="button" class="btn btn-danger btn-sm" id="btnDocSkip" title="Patient absent or no-show">
+                  ⏩ No-Show / Skip
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Big Prominent Call Next Button -->
+          <div class="call-next-container">
+            <button type="button" class="btn btn-call-next btn-glow" id="btnDocCallNext">
+              🔔 Call Next Patient
+            </button>
+          </div>
+
+          <!-- Waiting Queue List -->
+          <div class="queue-list-card">
+            <div class="card-title-bar">
+              <h3>
+                📋 Waiting Queue 
+                <span class="badge-count" id="queueBadgeCount">0</span>
+              </h3>
+              <span style="font-size: 0.8rem; color: var(--text-muted);">Ordered by arrival</span>
+            </div>
+
+            <div class="queue-items-container" id="waitingQueueList">
+              <div class="empty-state-list">No patients waiting in queue.</div>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- Right Side Panel: Settings & Skipped Management -->
+        <div class="doctor-side-col">
+
+          <!-- Queue Settings Card -->
+          <div class="side-card">
+            <h4>⚙️ Queue Settings</h4>
+            
+            <div class="config-row">
+              <label for="settingAvgTime">Avg Consult Time:</label>
+              <div style="display: flex; align-items: center; gap: 0.3rem;">
+                <input type="number" id="settingAvgTime" class="config-input" min="1" max="60" value="7" />
+                <span style="font-size: 0.8rem; color: var(--text-muted);">mins</span>
+              </div>
+            </div>
+
+            <div class="config-row">
+              <label for="settingDoctor">Doctor Name:</label>
+              <input type="text" id="settingDoctor" style="width: 140px; padding: 0.35rem 0.5rem; font-size: 0.85rem;" value="Dr. Naveen Pn" />
+            </div>
+
+            <div class="config-row">
+              <label for="settingRoom">Room Name:</label>
+              <input type="text" id="settingRoom" style="width: 140px; padding: 0.35rem 0.5rem; font-size: 0.85rem;" value="Consultation Room 1" />
+            </div>
+
+            <div class="config-row">
+              <label for="toggleSound">Sound & Voice Chime:</label>
+              <input type="checkbox" id="toggleSound" checked style="width: 18px; height: 18px; cursor: pointer;" />
+            </div>
+
+            <button type="button" class="btn btn-secondary btn-sm" id="btnSaveSettings" style="width: 100%; margin-top: 0.5rem;">
+              Save Settings
+            </button>
+          </div>
+
+          <!-- Skipped / No-Show List Card -->
+          <div class="side-card">
+            <h4>⚠️ Skipped Patients (<span id="skippedCount">0</span>)</h4>
+            <div class="skipped-list" id="skippedQueueList">
+              <div style="font-size: 0.8rem; color: var(--text-muted); text-align: center; padding: 1rem 0;">
+                No skipped patients
+              </div>
+            </div>
+          </div>
+
+          <!-- Recently Completed Card -->
+          <div class="side-card">
+            <h4>✅ Recently Completed</h4>
+            <div class="skipped-list" id="completedQueueList">
+              <div style="font-size: 0.8rem; color: var(--text-muted); text-align: center; padding: 1rem 0;">
+                No consultations completed yet
+              </div>
+            </div>
+          </div>
+
+          <!-- Danger Zone: Reset Queue -->
+          <div style="text-align: center; margin-top: 1rem;">
+            <button type="button" class="btn btn-danger btn-sm" id="btnResetQueue" style="width: 100%;">
+              🗑️ Reset All Queue Data
+            </button>
+          </div>
+
+        </div>
+      </div>
+    </section>
+
+    <!-- ========================================================
+         VIEW 3: PUBLIC TV / WAITING ROOM DISPLAY
+         ======================================================== -->
+    <section id="displayView" class="view-section">
+      <div class="display-wrapper">
+        <div class="display-header">
+          <div class="display-title">
+            <h2 id="tvClinicTitle">HealthFirst Medical Centre</h2>
+            <p>Waiting Hall Public Display</p>
+          </div>
+          <div class="display-clock" id="tvDigitalClock">11:30:00 AM</div>
+        </div>
+
+        <div class="display-grid">
+          <!-- Hero Currently Serving Box -->
+          <div class="display-hero-box pulse-glow">
+            <div class="display-hero-label">NOW SERVING</div>
+            <div class="display-hero-token" id="tvHeroToken">---</div>
+            <div class="display-hero-room" id="tvHeroRoom">Consultation Room 1</div>
+            <div class="display-hero-patient" id="tvHeroPatient">Waiting for next patient</div>
+          </div>
+
+          <!-- Upcoming Tokens List -->
+          <div class="display-upcoming-box">
+            <h3>UPCOMING TOKENS</h3>
+            <div id="tvUpcomingList">
+              <div style="color: #64748b; padding: 2rem 0; text-align: center;">Queue is currently empty</div>
+            </div>
+          </div>
+        </div>
+
+        <div style="margin-top: 1.5rem; text-align: center; font-size: 0.85rem; color: #64748b; border-top: 1px solid rgba(255,255,255,0.08); padding-top: 1rem;">
+          🔊 Audio announcements are enabled • Please proceed promptly when your token is called
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- ========================================================
+       MOBILE APP BOTTOM NAVIGATION BAR (Sticky for iOS & Android)
+       ======================================================== -->
+  <nav class="mobile-bottom-nav" id="mobileBottomNav" role="tablist">
+    <button class="mobile-nav-btn active" data-view="patient">
+      <span class="mobile-nav-icon">🩺</span>
+      <span class="mobile-nav-label">Patient</span>
+    </button>
+    <button class="mobile-nav-btn" data-view="doctor">
+      <span class="mobile-nav-icon">👨‍⚕️</span>
+      <span class="mobile-nav-label">Doctor</span>
+    </button>
+    <button class="mobile-nav-btn" data-view="display">
+      <span class="mobile-nav-icon">📺</span>
+      <span class="mobile-nav-label">TV Display</span>
+    </button>
+  </nav>
+
+  <!-- App Footer -->
+  <footer class="app-footer">
+    <p>Hospital Queue Management System • Real-Time Synchronization</p>
+  </footer>
+
+  <!-- Scripts -->
+  <script src="audio.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

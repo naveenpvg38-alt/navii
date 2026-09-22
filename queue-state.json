@@ -1,0 +1,15 @@
+{
+  "tokenCounter": 1,
+  "tokenPrefix": "A",
+  "activeQueue": [],
+  "currentPatient": null,
+  "completedPatients": [],
+  "skippedPatients": [],
+  "settings": {
+    "avgConsultationTime": 10,
+    "clinicName": "HealthFirst Medical Centre",
+    "doctorName": "Dr. Naveen Pn",
+    "roomNumber": "Consultation Room 1"
+  },
+  "lastAnnouncement": null
+}
