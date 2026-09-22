@@ -1,9 +1,70 @@
 {
-  "tokenCounter": 1,
+  "tokenCounter": 6,
   "tokenPrefix": "A",
   "activeQueue": [],
   "currentPatient": null,
-  "completedPatients": [],
+  "completedPatients": [
+    {
+      "id": "p_1790061002545_e5ccp",
+      "token": "A-001",
+      "name": "Naveen P N",
+      "age": 20,
+      "reason": "general checkup",
+      "department": "General OPD",
+      "registeredAt": "2026-09-22T07:10:02.545Z",
+      "status": "completed",
+      "calledAt": "2026-09-22T07:10:09.504Z",
+      "completedAt": "2026-09-22T07:22:14.492Z"
+    },
+    {
+      "id": "p_1790061642555_kydik",
+      "token": "A-002",
+      "name": "Darshan M Y",
+      "age": 20,
+      "reason": "fever",
+      "department": "Dental",
+      "registeredAt": "2026-09-22T07:20:42.555Z",
+      "status": "completed",
+      "calledAt": "2026-09-22T07:22:14.492Z",
+      "completedAt": "2026-09-22T07:24:15.721Z"
+    },
+    {
+      "id": "p_1790061695770_byaow",
+      "token": "A-003",
+      "name": "Umashankar T P",
+      "age": 20,
+      "reason": "checkup",
+      "department": "Cardiology",
+      "registeredAt": "2026-09-22T07:21:35.770Z",
+      "status": "completed",
+      "calledAt": "2026-09-22T07:24:15.721Z",
+      "completedAt": "2026-09-22T07:24:37.196Z"
+    },
+    {
+      "id": "p_1790061793348_bc6ok",
+      "token": "A-004",
+      "name": "shreyas r",
+      "age": 22,
+      "reason": "leg pain",
+      "department": "Cardiology",
+      "registeredAt": "2026-09-22T07:23:13.348Z",
+      "status": "completed",
+      "calledAt": "2026-09-22T07:24:37.196Z",
+      "completedAt": "2026-09-22T07:25:50.711Z"
+    },
+    {
+      "id": "p_1790061944834_db1jp",
+      "token": "A-005",
+      "name": "shakil bro",
+      "age": 19,
+      "reason": "skin allergy",
+      "department": "General OPD",
+      "registeredAt": "2026-09-22T07:25:44.834Z",
+      "status": "completed",
+      "calledAt": "2026-09-22T07:25:50.711Z",
+      "completedAt": "2026-09-22T07:25:58.916Z"
+    }
+  ],
   "skippedPatients": [],
   "settings": {
     "avgConsultationTime": 10,
@@ -11,5 +72,10 @@
     "doctorName": "Dr. Naveen Pn",
     "roomNumber": "Consultation Room 1"
   },
-  "lastAnnouncement": null
+  "lastAnnouncement": {
+    "token": "A-005",
+    "name": "shakil bro",
+    "room": "Consultation Room 1",
+    "timestamp": "2026-09-22T07:25:50.711Z"
+  }
 }

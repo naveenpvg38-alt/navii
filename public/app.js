@@ -975,12 +975,24 @@
       mouse.active = true;
     });
 
+    window.addEventListener('touchstart', (e) => {
+      if (e.touches && e.touches[0]) {
+        mouse.x = e.touches[0].clientX;
+        mouse.y = e.touches[0].clientY;
+        mouse.active = true;
+      }
+    }, { passive: true });
+
     window.addEventListener('touchmove', (e) => {
       if (e.touches && e.touches[0]) {
         mouse.x = e.touches[0].clientX;
         mouse.y = e.touches[0].clientY;
         mouse.active = true;
       }
+    }, { passive: true });
+
+    window.addEventListener('touchend', () => {
+      setTimeout(() => { mouse.active = false; }, 800);
     }, { passive: true });
 
     function render() {
