@@ -54,6 +54,9 @@
     syncText: document.getElementById('syncText'),
     headerClinicName: document.getElementById('headerClinicName'),
     headerDoctorSubtitle: document.getElementById('headerDoctorSubtitle'),
+    btnThemeToggle: document.getElementById('btnThemeToggle'),
+    themeIcon: document.getElementById('themeIcon'),
+    medicalParticlesCanvas: document.getElementById('medicalParticlesCanvas'),
     tabButtons: document.querySelectorAll('.tab-btn'),
     mobileNavButtons: document.querySelectorAll('.mobile-nav-btn'),
     viewSections: document.querySelectorAll('.view-section'),
@@ -885,7 +888,191 @@
       .replace(/"/g, '&quot;');
   }
 
+  /* ========================================================
+     DARK / LIGHT THEME SYSTEM
+     ======================================================== */
+  let currentTheme = localStorage.getItem('hqms_theme') || 
+    (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+
+  function applyTheme(theme) {
+    currentTheme = theme;
+    document.documentElement.setAttribute('data-theme', theme);
+    localStorage.setItem('hqms_theme', theme);
+
+    if (dom.themeIcon) {
+      dom.themeIcon.textContent = theme === 'dark' ? '☀️' : '🌙';
+      dom.themeIcon.style.transform = 'rotate(360deg)';
+      setTimeout(() => { if (dom.themeIcon) dom.themeIcon.style.transform = 'none'; }, 300);
+    }
+  }
+
+  function initThemeSystem() {
+    applyTheme(currentTheme);
+
+    if (dom.btnThemeToggle) {
+      dom.btnThemeToggle.addEventListener('click', () => {
+        triggerHaptic(20);
+        const nextTheme = currentTheme === 'dark' ? 'light' : 'dark';
+        applyTheme(nextTheme);
+        showToast(nextTheme === 'dark' ? '🌙 Dark mode enabled' : '☀️ Light mode enabled', 'info', '🎨');
+      });
+    }
+
+    if (window.matchMedia) {
+      window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', e => {
+        if (!localStorage.getItem('hqms_theme')) {
+          applyTheme(e.matches ? 'dark' : 'light');
+        }
+      });
+    }
+  }
+
+  /* ========================================================
+     ANIMATED MEDICAL PARTICLES BACKGROUND
+     ======================================================== */
+  function initMedicalParticles() {
+    const canvas = dom.medicalParticlesCanvas;
+    if (!canvas) return;
+
+    const ctx = canvas.getContext('2d');
+    let width = (canvas.width = window.innerWidth);
+    let height = (canvas.height = window.innerHeight);
+
+    const particleCount = width < 768 ? 30 : 52;
+    const particles = [];
+    let mouse = { x: -1000, y: -1000, active: false };
+
+    function createParticle(resetToBottom = false) {
+      const typeRand = Math.random();
+      const type = typeRand < 0.4 ? 'cross' : (typeRand < 0.75 ? 'orb' : 'ring');
+      return {
+        type,
+        x: Math.random() * width,
+        y: resetToBottom ? height + 20 : Math.random() * height,
+        size: type === 'cross' ? Math.random() * 10 + 10 : Math.random() * 8 + 6,
+        vx: (Math.random() - 0.5) * 0.35,
+        vy: -(Math.random() * 0.45 + 0.2), // slow upward drift
+        alpha: Math.random() * 0.16 + 0.1,
+        pulseSpeed: Math.random() * 0.02 + 0.01,
+        pulsePhase: Math.random() * Math.PI * 2,
+        rotation: Math.random() * Math.PI * 2,
+        vRot: (Math.random() - 0.5) * 0.015
+      };
+    }
+
+    for (let i = 0; i < particleCount; i++) {
+      particles.push(createParticle(false));
+    }
+
+    window.addEventListener('resize', () => {
+      width = canvas.width = window.innerWidth;
+      height = canvas.height = window.innerHeight;
+    });
+
+    window.addEventListener('mousemove', (e) => {
+      mouse.x = e.clientX;
+      mouse.y = e.clientY;
+      mouse.active = true;
+    });
+
+    window.addEventListener('touchmove', (e) => {
+      if (e.touches && e.touches[0]) {
+        mouse.x = e.touches[0].clientX;
+        mouse.y = e.touches[0].clientY;
+        mouse.active = true;
+      }
+    }, { passive: true });
+
+    function render() {
+      if (document.hidden) {
+        requestAnimationFrame(render);
+        return;
+      }
+
+      ctx.clearRect(0, 0, width, height);
+      const isDark = currentTheme === 'dark';
+
+      // Clinical colors based on theme
+      const primaryRgba = isDark ? '56, 189, 248' : '2, 132, 199';
+      const secondaryRgba = isDark ? '52, 211, 153' : '16, 185, 129';
+
+      particles.forEach((p, idx) => {
+        p.y += p.vy;
+        p.x += p.vx + Math.sin(p.pulsePhase) * 0.2;
+        p.rotation += p.vRot;
+        p.pulsePhase += p.pulseSpeed;
+
+        // Mouse gentle repulsion
+        if (mouse.active) {
+          const dx = p.x - mouse.x;
+          const dy = p.y - mouse.y;
+          const dist = Math.sqrt(dx * dx + dy * dy);
+          if (dist < 120 && dist > 0) {
+            const force = (120 - dist) / 120;
+            p.x += (dx / dist) * force * 1.5;
+            p.y += (dy / dist) * force * 1.5;
+          }
+        }
+
+        // Re-spawn when leaving screen
+        if (p.y < -30) {
+          particles[idx] = createParticle(true);
+          return;
+        }
+        if (p.x < -30) p.x = width + 20;
+        if (p.x > width + 30) p.x = -20;
+
+        const currentAlpha = p.alpha * (0.8 + 0.2 * Math.sin(p.pulsePhase));
+        const color = (idx % 2 === 0) ? primaryRgba : secondaryRgba;
+
+        ctx.save();
+        ctx.translate(p.x, p.y);
+        ctx.rotate(p.rotation);
+
+        if (p.type === 'cross') {
+          // Draw Medical Cross ➕
+          ctx.fillStyle = `rgba(${color}, ${currentAlpha})`;
+          const armLength = p.size;
+          const armThickness = p.size * 0.35;
+          ctx.beginPath();
+          if (typeof ctx.roundRect === 'function') {
+            ctx.roundRect(-armLength / 2, -armThickness / 2, armLength, armThickness, 3);
+            ctx.roundRect(-armThickness / 2, -armLength / 2, armThickness, armLength, 3);
+          } else {
+            ctx.rect(-armLength / 2, -armThickness / 2, armLength, armThickness);
+            ctx.rect(-armThickness / 2, -armLength / 2, armThickness, armLength);
+          }
+          ctx.fill();
+        } else if (p.type === 'orb') {
+          // Soft Glowing Bio-Sphere
+          const grad = ctx.createRadialGradient(0, 0, 0, 0, 0, p.size);
+          grad.addColorStop(0, `rgba(${color}, ${currentAlpha * 1.5})`);
+          grad.addColorStop(1, `rgba(${color}, 0)`);
+          ctx.fillStyle = grad;
+          ctx.beginPath();
+          ctx.arc(0, 0, p.size, 0, Math.PI * 2);
+          ctx.fill();
+        } else {
+          // Translucent Ring Node
+          ctx.strokeStyle = `rgba(${color}, ${currentAlpha * 0.9})`;
+          ctx.lineWidth = 1.5;
+          ctx.beginPath();
+          ctx.arc(0, 0, p.size * 0.7, 0, Math.PI * 2);
+          ctx.stroke();
+        }
+
+        ctx.restore();
+      });
+
+      requestAnimationFrame(render);
+    }
+
+    requestAnimationFrame(render);
+  }
+
   // Initialize
+  initThemeSystem();
+  initMedicalParticles();
   initRoute();
   initDigitalClock();
   fetchInitialQueue();

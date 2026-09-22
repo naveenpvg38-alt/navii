@@ -12,9 +12,10 @@
 </head>
 <body>
 
-  <!-- ========================================================
-       ANIMATED MEDICAL SPLASH SCREEN
-       ======================================================== -->
+  <!-- Interactive Medical Background Particles Canvas -->
+  <canvas id="medicalParticlesCanvas" class="medical-particles-canvas"></canvas>
+
+  <!-- Animated Medical Splash Screen -->
   <div id="splashScreen" class="splash-screen">
     <div class="splash-content">
       <div class="splash-logo-wrap">
@@ -53,10 +54,18 @@
         </div>
       </div>
 
-      <!-- Real-Time Sync Indicator -->
-      <div class="sync-badge" id="syncBadge">
-        <span class="sync-dot"></span>
-        <span id="syncText">Live Synced</span>
+      <!-- Right Header Actions (Sync Badge & Dark/Light Toggle) -->
+      <div class="header-actions">
+        <!-- Real-Time Sync Indicator -->
+        <div class="sync-badge" id="syncBadge">
+          <span class="sync-dot"></span>
+          <span id="syncText">Live Synced</span>
+        </div>
+
+        <!-- Dark/Light Mode Theme Toggle Button -->
+        <button type="button" class="btn-theme-toggle" id="btnThemeToggle" title="Switch Dark / Light Mode" aria-label="Toggle Theme">
+          <span class="theme-icon" id="themeIcon">🌙</span>
+        </button>
       </div>
 
       <!-- Desktop View Navigation Tabs -->

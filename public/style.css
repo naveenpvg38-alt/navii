@@ -11,16 +11,54 @@
   --danger: #ef4444;
   --danger-light: #fee2e2;
   --bg-main: #f8fafc;
+  --header-bg: rgba(255, 255, 255, 0.95);
   --card-bg: #ffffff;
+  --card-hover-border: #cbd5e1;
   --text-main: #0f172a;
   --text-muted: #64748b;
   --border-color: #e2e8f0;
-  --font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  --input-bg: #ffffff;
+  --subtle-box: #f8fafc;
+  --nav-tab-bg: #f1f5f9;
+  --bottom-nav-bg: rgba(255, 255, 255, 0.88);
+  --bottom-nav-border: rgba(226, 232, 240, 0.8);
   --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
   --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
   --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
   --safe-bottom: env(safe-area-inset-bottom, 0px);
   --safe-top: env(safe-area-inset-top, 0px);
+}
+
+/* ========================================================
+   DARK THEME PALETTE
+   ======================================================== */
+[data-theme="dark"] {
+  --primary: #38bdf8;
+  --primary-hover: #0ea5e9;
+  --primary-light: rgba(56, 189, 248, 0.15);
+  --primary-glow: rgba(56, 189, 248, 0.45);
+  --success: #34d399;
+  --success-light: rgba(52, 211, 153, 0.15);
+  --success-glow: rgba(52, 211, 153, 0.4);
+  --warning: #fbbf24;
+  --warning-light: rgba(251, 191, 36, 0.15);
+  --danger: #f87171;
+  --danger-light: rgba(248, 113, 113, 0.15);
+  --bg-main: #070d1a;
+  --header-bg: rgba(11, 20, 38, 0.95);
+  --card-bg: #111d38;
+  --card-hover-border: rgba(56, 189, 248, 0.3);
+  --text-main: #f8fafc;
+  --text-muted: #94a3b8;
+  --border-color: rgba(255, 255, 255, 0.08);
+  --input-bg: #0c162e;
+  --subtle-box: #0d1833;
+  --nav-tab-bg: #0c162e;
+  --bottom-nav-bg: rgba(11, 20, 38, 0.92);
+  --bottom-nav-border: rgba(255, 255, 255, 0.08);
+  --shadow-sm: 0 1px 3px 0 rgba(0, 0, 0, 0.4);
+  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.5);
+  --shadow-lg: 0 12px 24px rgba(0, 0, 0, 0.6);
 }
 
 * {
@@ -32,11 +70,12 @@
 
 html, body {
   min-height: 100%;
-  font-family: var(--font-family);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
   background-color: var(--bg-main);
   color: var(--text-main);
   line-height: 1.5;
   -webkit-font-smoothing: antialiased;
+  transition: background-color 0.3s ease, color 0.3s ease;
 }
 
 body {
@@ -45,6 +84,28 @@ body {
   min-height: 100vh;
   position: relative;
   overflow-x: hidden;
+}
+
+/* ========================================================
+   MEDICAL PARTICLES CANVAS (Animated Background)
+   ======================================================== */
+.medical-particles-canvas {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* Ensure app contents sit above background particles */
+header.app-header,
+main.app-main,
+nav.mobile-bottom-nav,
+footer.app-footer {
+  position: relative;
+  z-index: 1;
 }
 
 /* ========================================================
@@ -143,7 +204,6 @@ body {
   margin-bottom: 1.5rem;
 }
 
-/* Animated ECG Line */
 .splash-ecg-wrap {
   width: 140px;
   height: 30px;
@@ -169,7 +229,6 @@ body {
   100% { stroke-dashoffset: -120; opacity: 0.2; }
 }
 
-/* Progress Bar */
 .splash-progress {
   width: 180px;
   height: 4px;
@@ -237,7 +296,7 @@ body {
 }
 
 .toast {
-  background: #ffffff;
+  background: var(--card-bg);
   color: var(--text-main);
   border: 1px solid var(--border-color);
   border-radius: 12px;
@@ -278,13 +337,16 @@ body {
    HEADER & NAVIGATION
    ======================================================== */
 header.app-header {
-  background: #ffffff;
+  background: var(--header-bg);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
   border-bottom: 1px solid var(--border-color);
   position: sticky;
   top: 0;
   z-index: 100;
   box-shadow: var(--shadow-sm);
   padding-top: var(--safe-top);
+  transition: background 0.3s ease, border-color 0.3s ease;
 }
 
 .header-container {
@@ -333,6 +395,13 @@ header.app-header {
   color: var(--text-muted);
 }
 
+/* Right Header Actions & Theme Toggle */
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
 .sync-badge {
   display: inline-flex;
   align-items: center;
@@ -341,35 +410,66 @@ header.app-header {
   border-radius: 9999px;
   font-size: 0.75rem;
   font-weight: 600;
-  background-color: #ecfdf5;
-  color: #065f46;
-  border: 1px solid #a7f3d0;
+  background-color: var(--success-light);
+  color: var(--success);
+  border: 1px solid rgba(16, 185, 129, 0.3);
   transition: all 0.3s ease;
 }
 
 .sync-dot {
   width: 8px;
   height: 8px;
-  background-color: #10b981;
+  background-color: var(--success);
   border-radius: 50%;
   animation: pulse-dot 2s infinite;
 }
 
 .sync-badge.disconnected {
-  background-color: #fef2f2;
-  color: #991b1b;
-  border-color: #fecaca;
+  background-color: var(--danger-light);
+  color: var(--danger);
+  border-color: rgba(239, 68, 68, 0.3);
 }
 
 .sync-badge.disconnected .sync-dot {
-  background-color: #ef4444;
+  background-color: var(--danger);
   animation: none;
+}
+
+/* Theme Toggle Button */
+.btn-theme-toggle {
+  background: var(--nav-tab-bg);
+  border: 1px solid var(--border-color);
+  color: var(--text-main);
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 1.1rem;
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: var(--shadow-sm);
+}
+
+.btn-theme-toggle:hover {
+  transform: scale(1.08);
+  border-color: var(--primary);
+}
+
+.btn-theme-toggle:active {
+  transform: scale(0.92);
+}
+
+.theme-icon {
+  display: inline-block;
+  transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
 /* Nav Tabs (Desktop) */
 nav.view-tabs {
   display: flex;
-  background-color: #f1f5f9;
+  background-color: var(--nav-tab-bg);
   padding: 0.25rem;
   border-radius: 10px;
   gap: 0.25rem;
@@ -395,13 +495,13 @@ nav.view-tabs {
 }
 
 .tab-btn.active {
-  background: #ffffff;
+  background: var(--card-bg);
   color: var(--primary);
   box-shadow: var(--shadow-sm);
 }
 
 /* ========================================================
-   MAIN CONTAINER
+   MAIN CONTAINER & CARDS
    ======================================================== */
 main.app-main {
   flex: 1;
@@ -411,7 +511,6 @@ main.app-main {
   padding: 1.5rem 1rem;
 }
 
-/* Views */
 .view-section {
   display: none;
   animation: viewSlideIn 0.3s cubic-bezier(0.16, 1, 0.3, 1);
@@ -426,9 +525,6 @@ main.app-main {
   to { opacity: 1; transform: translateY(0); }
 }
 
-/* ========================================================
-   PATIENT PORTAL VIEW
-   ======================================================== */
 .patient-container {
   max-width: 500px;
   margin: 0 auto;
@@ -442,7 +538,7 @@ main.app-main {
   padding: 1.5rem;
   margin-bottom: 1.25rem;
   position: relative;
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.3s ease, border-color 0.3s ease;
 }
 
 .card-header {
@@ -483,7 +579,7 @@ label {
   display: block;
   font-size: 0.85rem;
   font-weight: 600;
-  color: #334155;
+  color: var(--text-main);
   margin-bottom: 0.4rem;
 }
 
@@ -491,7 +587,6 @@ label {
   color: var(--danger);
 }
 
-/* Prevents iOS zoom jumps by enforcing 16px min font size */
 input[type="text"],
 input[type="number"],
 select {
@@ -501,7 +596,7 @@ select {
   border-radius: 12px;
   font-size: 1rem; /* 16px min for iOS Safari */
   color: var(--text-main);
-  background: #ffffff;
+  background: var(--input-bg);
   transition: border-color 0.2s, box-shadow 0.2s, background-color 0.2s;
   outline: none;
 }
@@ -509,7 +604,6 @@ select {
 input:focus, select:focus {
   border-color: var(--primary);
   box-shadow: 0 0 0 3.5px var(--primary-glow);
-  background-color: #fdfefe;
 }
 
 .form-row {
@@ -528,8 +622,8 @@ input:focus, select:focus {
 
 .dept-chip {
   border: 1.5px solid var(--border-color);
-  background: #f8fafc;
-  color: #475569;
+  background: var(--subtle-box);
+  color: var(--text-muted);
   font-size: 0.82rem;
   font-weight: 600;
   padding: 0.45rem 0.8rem;
@@ -540,7 +634,7 @@ input:focus, select:focus {
 }
 
 .dept-chip:hover {
-  background: #f1f5f9;
+  background: var(--nav-tab-bg);
   color: var(--text-main);
 }
 
@@ -585,7 +679,6 @@ input:focus, select:focus {
 
 .btn-primary:hover {
   background: linear-gradient(135deg, #0369a1, #075985);
-  box-shadow: 0 8px 18px var(--primary-glow);
 }
 
 .btn-glow {
@@ -617,22 +710,25 @@ input:focus, select:focus {
 }
 
 .btn-secondary {
-  background-color: #f1f5f9;
-  color: #475569;
+  background-color: var(--nav-tab-bg);
+  color: var(--text-main);
+  border: 1px solid var(--border-color);
 }
 
 .btn-secondary:hover {
-  background-color: #e2e8f0;
+  background-color: var(--subtle-box);
 }
 
 .btn-warning {
-  background: #fef3c7;
-  color: #b45309;
+  background: var(--warning-light);
+  color: var(--warning);
+  border: 1px solid rgba(245, 158, 11, 0.3);
 }
 
 .btn-danger {
-  background-color: #fee2e2;
-  color: #dc2626;
+  background-color: var(--danger-light);
+  color: var(--danger);
+  border: 1px solid rgba(239, 68, 68, 0.3);
 }
 
 .btn-sm {
@@ -674,10 +770,9 @@ input:focus, select:focus {
   text-align: center;
   position: relative;
   overflow: hidden;
-  box-shadow: 0 12px 24px -4px rgba(0, 0, 0, 0.08);
+  box-shadow: 0 12px 24px -4px rgba(0, 0, 0, 0.12);
 }
 
-/* Cutout notches like a boarding pass / clinic token slip */
 .ticket-cutout {
   position: absolute;
   width: 22px;
@@ -687,6 +782,7 @@ input:focus, select:focus {
   top: 180px;
   box-shadow: inset 0 0 0 1px var(--border-color);
   z-index: 5;
+  transition: background-color 0.3s ease;
 }
 
 .ticket-cutout-left {
@@ -721,8 +817,9 @@ input:focus, select:focus {
 }
 
 .btn-copy-token {
-  background: #f1f5f9;
+  background: var(--subtle-box);
   border: 1px solid var(--border-color);
+  color: var(--text-main);
   border-radius: 8px;
   padding: 0.35rem 0.5rem;
   font-size: 1rem;
@@ -732,7 +829,6 @@ input:focus, select:focus {
 
 .btn-copy-token:active {
   transform: scale(0.9);
-  background: #e2e8f0;
 }
 
 .patient-identity {
@@ -759,41 +855,43 @@ input:focus, select:focus {
 }
 
 .status-waiting {
-  background-color: #eff6ff;
-  color: #1d4ed8;
-  border: 1px solid #bfdbfe;
+  background-color: var(--primary-light);
+  color: var(--primary);
+  border: 1px solid rgba(2, 132, 199, 0.3);
 }
 
 .status-serving {
-  background-color: #ecfdf5;
-  color: #047857;
-  border: 1px solid #6ee7b7;
+  background-color: var(--success-light);
+  color: var(--success);
+  border: 1px solid rgba(16, 185, 129, 0.3);
   animation: pulse-green 1.5s infinite;
 }
 
 .status-completed {
-  background-color: #f1f5f9;
-  color: #475569;
+  background-color: var(--subtle-box);
+  color: var(--text-muted);
+  border: 1px solid var(--border-color);
 }
 
 .status-skipped {
-  background-color: #fef2f2;
-  color: #b91c1c;
+  background-color: var(--danger-light);
+  color: var(--danger);
+  border: 1px solid rgba(239, 68, 68, 0.3);
 }
 
 /* Progress track */
 .queue-progress-box {
   margin: 0.75rem 0 1.25rem 0;
-  background: #f8fafc;
+  background: var(--subtle-box);
   padding: 0.75rem 1rem;
   border-radius: 12px;
-  border: 1px solid #f1f5f9;
+  border: 1px solid var(--border-color);
 }
 
 .progress-bar-bg {
   width: 100%;
   height: 8px;
-  background: #e2e8f0;
+  background: var(--border-color);
   border-radius: 9999px;
   overflow: hidden;
 }
@@ -823,8 +921,8 @@ input:focus, select:focus {
 }
 
 .metric-box {
-  background: #f8fafc;
-  border: 1px solid #e2e8f0;
+  background: var(--subtle-box);
+  border: 1px solid var(--border-color);
   border-radius: 14px;
   padding: 1rem;
   text-align: center;
@@ -832,7 +930,7 @@ input:focus, select:focus {
 }
 
 .metric-interactive:hover {
-  border-color: #cbd5e1;
+  border-color: var(--card-hover-border);
   transform: translateY(-2px);
 }
 
@@ -870,6 +968,10 @@ input:focus, select:focus {
   opacity: 0.75;
 }
 
+[data-theme="dark"] .ticket-barcode rect {
+  fill: #94a3b8;
+}
+
 .barcode-subtext {
   display: block;
   font-size: 0.65rem;
@@ -880,7 +982,7 @@ input:focus, select:focus {
 }
 
 .now-serving-badge-strip {
-  background: #f8fafc;
+  background: var(--subtle-box);
   border: 1px dashed var(--border-color);
   border-radius: 10px;
   padding: 0.7rem;
@@ -985,7 +1087,7 @@ input:focus, select:focus {
 }
 
 .stat-item {
-  background: white;
+  background: var(--card-bg);
   padding: 0.85rem;
   border-radius: 14px;
   border: 1px solid var(--border-color);
@@ -1015,8 +1117,8 @@ input:focus, select:focus {
 
 /* Current Serving Card */
 .serving-box {
-  background: #ffffff;
-  border: 2px solid #a7f3d0;
+  background: var(--card-bg);
+  border: 2px solid rgba(16, 185, 129, 0.4);
   border-radius: 18px;
   padding: 1.5rem;
   box-shadow: var(--shadow-md);
@@ -1028,7 +1130,7 @@ input:focus, select:focus {
   position: absolute;
   top: -12px;
   left: 20px;
-  background: #10b981;
+  background: var(--success);
   color: white;
   font-size: 0.75rem;
   font-weight: 800;
@@ -1066,13 +1168,13 @@ input:focus, select:focus {
 .active-token-lg {
   font-size: 2.8rem;
   font-weight: 900;
-  color: #059669;
+  color: var(--success);
   font-family: monospace, var(--font-family);
   line-height: 1;
-  background: #ecfdf5;
+  background: var(--success-light);
   padding: 0.5rem 0.9rem;
   border-radius: 14px;
-  border: 1.5px solid #a7f3d0;
+  border: 1.5px solid rgba(16, 185, 129, 0.4);
 }
 
 .pulse-glow {
@@ -1098,8 +1200,8 @@ input:focus, select:focus {
 .consult-timer {
   font-size: 0.8rem;
   font-weight: 700;
-  color: #047857;
-  background: #d1fae5;
+  color: var(--success);
+  background: var(--success-light);
   padding: 0.25rem 0.6rem;
   border-radius: 6px;
   display: inline-block;
@@ -1131,20 +1233,19 @@ input:focus, select:focus {
 .btn-call-next:hover {
   background: linear-gradient(135deg, #0369a1, #0284c7);
   transform: translateY(-2px);
-  box-shadow: 0 14px 24px -3px var(--primary-glow);
 }
 
 .btn-call-next:disabled {
-  background: #cbd5e1;
-  color: #64748b;
+  background: var(--border-color);
+  color: var(--text-muted);
   cursor: not-allowed;
   transform: none;
   box-shadow: none;
 }
 
-/* Queue Table / List */
+/* Queue List */
 .queue-list-card {
-  background: white;
+  background: var(--card-bg);
   border-radius: 18px;
   border: 1px solid var(--border-color);
   box-shadow: var(--shadow-sm);
@@ -1168,8 +1269,8 @@ input:focus, select:focus {
 }
 
 .badge-count {
-  background: #e0f2fe;
-  color: #0369a1;
+  background: var(--primary-light);
+  color: var(--primary);
   font-size: 0.75rem;
   padding: 0.15rem 0.55rem;
   border-radius: 9999px;
@@ -1187,12 +1288,12 @@ input:focus, select:focus {
   align-items: center;
   justify-content: space-between;
   padding: 0.85rem 1.25rem;
-  border-bottom: 1px solid #f1f5f9;
+  border-bottom: 1px solid var(--border-color);
   transition: background-color 0.15s;
 }
 
 .queue-row:hover {
-  background-color: #f8fafc;
+  background-color: var(--subtle-box);
 }
 
 .queue-row-info {
@@ -1204,7 +1305,7 @@ input:focus, select:focus {
 .queue-pos {
   font-size: 0.85rem;
   font-weight: 800;
-  color: #94a3b8;
+  color: var(--text-muted);
   width: 26px;
 }
 
@@ -1213,10 +1314,10 @@ input:focus, select:focus {
   font-size: 1.15rem;
   font-weight: 800;
   color: var(--primary);
-  background: #f0f9ff;
+  background: var(--primary-light);
   padding: 0.25rem 0.6rem;
   border-radius: 8px;
-  border: 1px solid #bae6fd;
+  border: 1px solid rgba(2, 132, 199, 0.3);
 }
 
 .queue-details strong {
@@ -1243,9 +1344,9 @@ input:focus, select:focus {
   font-size: 0.9rem;
 }
 
-/* Config & Skipped Side Cards */
+/* Side Cards */
 .side-card {
-  background: white;
+  background: var(--card-bg);
   border-radius: 18px;
   border: 1px solid var(--border-color);
   padding: 1.25rem;
@@ -1293,13 +1394,13 @@ input:focus, select:focus {
   align-items: center;
   justify-content: space-between;
   padding: 0.5rem 0;
-  border-bottom: 1px solid #f1f5f9;
+  border-bottom: 1px solid var(--border-color);
   font-size: 0.85rem;
 }
 
 .skipped-token {
   font-weight: 800;
-  color: #dc2626;
+  color: var(--danger);
   font-family: monospace;
 }
 
@@ -1434,7 +1535,7 @@ input:focus, select:focus {
 }
 
 /* ========================================================
-   MOBILE BOTTOM NAVIGATION (Sticky iOS / Android Bar)
+   MOBILE BOTTOM NAVIGATION BAR
    ======================================================== */
 .mobile-bottom-nav {
   display: none;
@@ -1442,15 +1543,15 @@ input:focus, select:focus {
   bottom: 0;
   left: 0;
   right: 0;
-  background: rgba(255, 255, 255, 0.88);
+  background: var(--bottom-nav-bg);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
-  border-top: 1px solid rgba(226, 232, 240, 0.8);
+  border-top: 1px solid var(--bottom-nav-border);
   z-index: 900;
   padding: 0.4rem 1rem calc(var(--safe-bottom) + 0.4rem) 1rem;
   justify-content: space-around;
   align-items: center;
-  box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.05);
+  box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.08);
 }
 
 .mobile-nav-btn {
@@ -1460,7 +1561,7 @@ input:focus, select:focus {
   flex-direction: column;
   align-items: center;
   gap: 0.15rem;
-  color: #64748b;
+  color: var(--text-muted);
   cursor: pointer;
   padding: 0.35rem 0.9rem;
   border-radius: 12px;
@@ -1527,7 +1628,6 @@ input:focus, select:focus {
   100% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
 }
 
-/* Footer */
 footer.app-footer {
   text-align: center;
   padding: 1.5rem 1rem;
