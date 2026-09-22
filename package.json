@@ -6,11 +6,17 @@
   "scripts": {
     "start": "node server.js"
   },
-  "keywords": ["hospital", "queue", "real-time", "healthcare"],
+  "keywords": [
+    "hospital",
+    "queue",
+    "real-time",
+    "healthcare"
+  ],
   "author": "",
   "license": "MIT",
   "dependencies": {
     "express": "^4.21.2",
+    "qrcode": "^1.5.4",
     "ws": "^8.18.0"
   }
 }

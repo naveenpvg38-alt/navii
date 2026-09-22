@@ -69,16 +69,20 @@
     regName: document.getElementById('regName'),
     regAge: document.getElementById('regAge'),
     regDept: document.getElementById('regDept'),
+    regPriority: document.getElementById('regPriority'),
     deptChips: document.querySelectorAll('.dept-chip'),
+    priorityChips: document.querySelectorAll('.priority-chip'),
     regReason: document.getElementById('regReason'),
     btnSubmitReg: document.getElementById('btnSubmitReg'),
     lookupTokenInput: document.getElementById('lookupTokenInput'),
     btnLookupToken: document.getElementById('btnLookupToken'),
     btnNewToken: document.getElementById('btnNewToken'),
     btnCopyToken: document.getElementById('btnCopyToken'),
+    btnOpenQrPass: document.getElementById('btnOpenQrPass'),
     callAlertBanner: document.getElementById('callAlertBanner'),
     callAlertRoom: document.getElementById('callAlertRoom'),
     ticketStatusBadge: document.getElementById('ticketStatusBadge'),
+    ticketPriorityBadge: document.getElementById('ticketPriorityBadge'),
     ticketTokenNumber: document.getElementById('ticketTokenNumber'),
     ticketPatientName: document.getElementById('ticketPatientName'),
     ticketMeta: document.getElementById('ticketMeta'),
@@ -89,18 +93,38 @@
     ticketProgressBar: document.getElementById('ticketProgressBar'),
     ticketQueuePosSummary: document.getElementById('ticketQueuePosSummary'),
 
+    // QR e-Pass & Thermal Slip Modal
+    qrPassModal: document.getElementById('qrPassModal'),
+    btnCloseQrModal: document.getElementById('btnCloseQrModal'),
+    btnPrintQrSlip: document.getElementById('btnPrintQrSlip'),
+    btnCopyQrLink: document.getElementById('btnCopyQrLink'),
+    slipClinicName: document.getElementById('slipClinicName'),
+    slipDoctorName: document.getElementById('slipDoctorName'),
+    slipTokenNumber: document.getElementById('slipTokenNumber'),
+    slipPriorityTag: document.getElementById('slipPriorityTag'),
+    slipPatientName: document.getElementById('slipPatientName'),
+    slipDepartment: document.getElementById('slipDepartment'),
+    slipPosition: document.getElementById('slipPosition'),
+    slipWait: document.getElementById('slipWait'),
+    slipDateTime: document.getElementById('slipDateTime'),
+    slipQrImage: document.getElementById('slipQrImage'),
+
     // Doctor View
     doctorView: document.getElementById('doctorView'),
     statWaiting: document.getElementById('statWaiting'),
     statServing: document.getElementById('statServing'),
     statCompleted: document.getElementById('statCompleted'),
     statSkipped: document.getElementById('statSkipped'),
+    btnOpenAnalytics: document.getElementById('btnOpenAnalytics'),
     servingEmptyState: document.getElementById('servingEmptyState'),
     servingActiveState: document.getElementById('servingActiveState'),
     docCurrentToken: document.getElementById('docCurrentToken'),
     docCurrentName: document.getElementById('docCurrentName'),
     docCurrentDetails: document.getElementById('docCurrentDetails'),
     docConsultTimer: document.getElementById('docConsultTimer'),
+    docRxInput: document.getElementById('docRxInput'),
+    rxQuickChips: document.querySelectorAll('.rx-chip'),
+    rxSavedStatus: document.getElementById('rxSavedStatus'),
     btnDocCallNext: document.getElementById('btnDocCallNext'),
     btnDocComplete: document.getElementById('btnDocComplete'),
     btnDocRecall: document.getElementById('btnDocRecall'),
@@ -110,12 +134,25 @@
     settingAvgTime: document.getElementById('settingAvgTime'),
     settingDoctor: document.getElementById('settingDoctor'),
     settingRoom: document.getElementById('settingRoom'),
+    settingLang: document.getElementById('settingLang'),
     toggleSound: document.getElementById('toggleSound'),
     btnSaveSettings: document.getElementById('btnSaveSettings'),
     skippedCount: document.getElementById('skippedCount'),
     skippedQueueList: document.getElementById('skippedQueueList'),
     completedQueueList: document.getElementById('completedQueueList'),
     btnResetQueue: document.getElementById('btnResetQueue'),
+
+    // Analytics Modal
+    analyticsModal: document.getElementById('analyticsModal'),
+    btnCloseAnalyticsModal: document.getElementById('btnCloseAnalyticsModal'),
+    btnCloseAnalyticsModalBtn: document.getElementById('btnCloseAnalyticsModalBtn'),
+    btnExportCsv: document.getElementById('btnExportCsv'),
+    kpiAvgWait: document.getElementById('kpiAvgWait'),
+    kpiAvgConsult: document.getElementById('kpiAvgConsult'),
+    kpiTotalCompleted: document.getElementById('kpiTotalCompleted'),
+    kpiEmergencyCount: document.getElementById('kpiEmergencyCount'),
+    rushChartBars: document.getElementById('rushChartBars'),
+    deptDistributionList: document.getElementById('deptDistributionList'),
 
     // Public TV View
     displayView: document.getElementById('displayView'),
@@ -132,7 +169,15 @@
     tvHeroDept: document.getElementById('tvHeroDept'),
     tvWaitingCountBadge: document.getElementById('tvWaitingCountBadge'),
     tvUpcomingList: document.getElementById('tvUpcomingList'),
-    tvRecentList: document.getElementById('tvRecentList')
+    tvRecentList: document.getElementById('tvRecentList'),
+
+    // TV Call Overlay
+    tvCallOverlay: document.getElementById('tvCallOverlay'),
+    tvOverlayToken: document.getElementById('tvOverlayToken'),
+    tvOverlayPatient: document.getElementById('tvOverlayPatient'),
+    tvOverlayMeta: document.getElementById('tvOverlayMeta'),
+    tvOverlayRoom: document.getElementById('tvOverlayRoom'),
+    tvOverlayDoctor: document.getElementById('tvOverlayDoctor')
   };
 
   /* ========================================================
@@ -354,21 +399,46 @@
       renderAllViews();
 
       const announcement = message.announcement;
+      const calledPatient = message.calledPatient || queueState.currentPatient;
+      const isEmergency = (calledPatient && calledPatient.priority === 'emergency');
+
       if (announcement) {
         const token = announcement.token;
         const room = announcement.room || 'Consultation Room 1';
+        const lang = queueState.settings ? queueState.settings.announcementLang : 'en-US';
 
         // Display toast across views
-        showToast(`🔔 Token ${token} called to ${room}`, 'info', '📢');
+        showToast(`🔔 Token ${token} called to ${room}`, isEmergency ? 'error' : 'info', isEmergency ? '🚨' : '📢');
 
-        // Play hospital ding-dong chime
+        // Play hospital ding-dong chime & localized voice
         if (window.soundEffects) {
-          window.soundEffects.announce(token, room);
+          window.soundEffects.announce(token, room, isEmergency, lang);
+        }
+
+        // TV Display Fullscreen Takeover
+        if (dom.tvCallOverlay) {
+          if (dom.tvOverlayToken) dom.tvOverlayToken.textContent = token;
+          if (dom.tvOverlayPatient) dom.tvOverlayPatient.textContent = announcement.name || calledPatient?.name || 'Patient';
+          if (dom.tvOverlayRoom) dom.tvOverlayRoom.textContent = room.toUpperCase();
+          if (dom.tvOverlayMeta) {
+            const dept = calledPatient?.department || 'General OPD';
+            const prio = isEmergency ? '🚨 EMERGENCY FAST-TRACK' : (calledPatient?.priority === 'priority' ? '🟡 PRIORITY (SENIOR/CHILD)' : 'ROUTINE OPD');
+            dom.tvOverlayMeta.textContent = `${dept} • ${prio}`;
+          }
+          if (dom.tvOverlayDoctor && queueState.settings) {
+            dom.tvOverlayDoctor.textContent = `${queueState.settings.doctorName || 'Dr. Naveen Pn'} • ${queueState.settings.roomNumber || 'Room 1'}`;
+          }
+          dom.tvCallOverlay.style.display = 'flex';
+
+          clearTimeout(window._tvCallOverlayTimeout);
+          window._tvCallOverlayTimeout = setTimeout(() => {
+            if (dom.tvCallOverlay) dom.tvCallOverlay.style.display = 'none';
+          }, 6500);
         }
 
         // If this user is the one called
         if (myPatientToken === token) {
-          triggerHaptic([400, 200, 400]);
+          triggerHaptic(isEmergency ? [500, 200, 500, 200, 500] : [400, 200, 400]);
           triggerConfetti();
         }
       }
@@ -446,6 +516,21 @@
       dom.ticketNowServingInfo.textContent = `${queueState.currentPatient.token} (${queueState.currentPatient.name})`;
     } else {
       dom.ticketNowServingInfo.textContent = 'None';
+    }
+
+    const activePatient = isServing ? queueState.currentPatient : (waitingPatient || completedPatient || skippedPatient || myPatientData);
+    if (dom.ticketPriorityBadge && activePatient) {
+      const prio = activePatient.priority || 'normal';
+      if (prio === 'emergency') {
+        dom.ticketPriorityBadge.className = 'ticket-priority-pill priority-emergency';
+        dom.ticketPriorityBadge.textContent = '🚨 EMERGENCY FAST-TRACK';
+      } else if (prio === 'priority') {
+        dom.ticketPriorityBadge.className = 'ticket-priority-pill priority-priority';
+        dom.ticketPriorityBadge.textContent = '🟡 PRIORITY (SENIOR/CHILD)';
+      } else {
+        dom.ticketPriorityBadge.className = 'ticket-priority-pill priority-normal';
+        dom.ticketPriorityBadge.textContent = 'ROUTINE OPD';
+      }
     }
 
     if (isServing) {
@@ -533,10 +618,17 @@
       dom.docCurrentName.textContent = cp.name;
       dom.docCurrentDetails.textContent = `Age: ${cp.age || 'N/A'} • ${cp.reason || 'Consultation'} (${cp.department || 'General'})`;
 
+      if (dom.docRxInput && document.activeElement !== dom.docRxInput) {
+        dom.docRxInput.value = cp.consultationNotes || cp.prescription || '';
+      }
+
       startConsultTimer(cp.calledAt);
     } else {
       dom.servingEmptyState.style.display = 'block';
       dom.servingActiveState.style.display = 'none';
+      if (dom.docRxInput && document.activeElement !== dom.docRxInput) {
+        dom.docRxInput.value = '';
+      }
       stopConsultTimer();
     }
 
@@ -548,6 +640,7 @@
           <div class="queue-row-info">
             <span class="queue-pos">#${p.position}</span>
             <span class="queue-token">${p.token}</span>
+            ${p.priority === 'emergency' ? '<span class="ticket-priority-pill priority-emergency" style="font-size: 0.65rem; margin-left: 0.3rem;">🚨 EMERGENCY</span>' : (p.priority === 'priority' ? '<span class="ticket-priority-pill priority-priority" style="font-size: 0.65rem; margin-left: 0.3rem;">🟡 PRIORITY</span>' : '')}
             <div class="queue-details">
               <strong>${escapeHtml(p.name)} ${p.age ? `<span style="font-weight: normal; color: #64748b;">(${p.age}y)</span>` : ''}</strong>
               <span>${escapeHtml(p.department || 'General')} • ${escapeHtml(p.reason)} • ~${p.estimatedWaitTime}m</span>
@@ -597,6 +690,9 @@
       dom.settingAvgTime.value = queueState.settings.avgConsultationTime || 7;
       if (dom.settingDoctor) dom.settingDoctor.value = queueState.settings.doctorName || 'Dr. Naveen Pn';
       dom.settingRoom.value = queueState.settings.roomNumber || 'Consultation Room 1';
+      if (dom.settingLang && queueState.settings.announcementLang) {
+        dom.settingLang.value = queueState.settings.announcementLang;
+      }
     }
   }
 
@@ -740,7 +836,7 @@
   }
 
   /* ========================================================
-     PATIENT ACTIONS & DEPARTMENT CHIPS
+     PATIENT ACTIONS, PRIORITY & DEPARTMENT CHIPS
      ======================================================== */
   // Department Chip Clicks
   dom.deptChips.forEach(chip => {
@@ -748,6 +844,16 @@
       dom.deptChips.forEach(c => c.classList.remove('active'));
       chip.classList.add('active');
       dom.regDept.value = chip.dataset.dept;
+      triggerHaptic(15);
+    });
+  });
+
+  // Triage Priority Chip Clicks
+  dom.priorityChips.forEach(chip => {
+    chip.addEventListener('click', () => {
+      dom.priorityChips.forEach(c => c.classList.remove('active'));
+      chip.classList.add('active');
+      if (dom.regPriority) dom.regPriority.value = chip.dataset.priority;
       triggerHaptic(15);
     });
   });
@@ -777,6 +883,7 @@
     const age = dom.regAge.value.trim();
     const department = dom.regDept.value;
     const reason = dom.regReason.value.trim();
+    const priority = dom.regPriority ? dom.regPriority.value : 'normal';
 
     if (!name) return;
 
@@ -787,7 +894,7 @@
       const res = await fetch('/api/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name, age, department, reason })
+        body: JSON.stringify({ name, age, department, reason, priority })
       });
 
       const data = await res.json();
@@ -801,7 +908,8 @@
 
         // Celebration animation
         triggerConfetti();
-        showToast(`Token ${myPatientToken} issued successfully!`, 'success', '🎉');
+        const prioMsg = priority === 'emergency' ? '🚨 EMERGENCY Fast-Track' : (priority === 'priority' ? '🟡 Priority' : '');
+        showToast(`Token ${myPatientToken} issued! ${prioMsg}`, 'success', '🎉');
       }
     } catch (err) {
       showToast('Could not register patient. Please check network.', 'error', '⚠️');
@@ -811,6 +919,77 @@
       dom.btnSubmitReg.innerHTML = '<span class="btn-icon">🎟️</span><span class="btn-text">Issue Digital Token</span>';
     }
   });
+
+  // QR e-Pass & Thermal Print Slip Modal
+  if (dom.btnOpenQrPass) {
+    dom.btnOpenQrPass.addEventListener('click', async () => {
+      triggerHaptic(20);
+      if (!myPatientToken) return;
+
+      const activePatient = (queueState.currentPatient && queueState.currentPatient.token === myPatientToken) 
+        ? queueState.currentPatient 
+        : (queueState.activeQueue.find(p => p.token === myPatientToken) || myPatientData || { name: 'Patient' });
+
+      // Populate Thermal Slip Fields
+      if (dom.slipClinicName && queueState.settings) dom.slipClinicName.textContent = queueState.settings.clinicName || 'HealthFirst Medical Centre';
+      if (dom.slipDoctorName && queueState.settings) dom.slipDoctorName.textContent = `${queueState.settings.doctorName || 'Dr. Naveen Pn'} • ${queueState.settings.roomNumber || 'Room 1'}`;
+      if (dom.slipTokenNumber) dom.slipTokenNumber.textContent = myPatientToken;
+      if (dom.slipPatientName) dom.slipPatientName.textContent = activePatient.name;
+      if (dom.slipDepartment) dom.slipDepartment.textContent = activePatient.department || 'General OPD';
+      if (dom.slipPosition) dom.slipPosition.textContent = activePatient.position ? `#${activePatient.position} in line` : 'Active';
+      if (dom.slipWait) dom.slipWait.textContent = activePatient.estimatedWaitTime ? `~${activePatient.estimatedWaitTime} mins` : 'Immediate';
+      if (dom.slipDateTime) dom.slipDateTime.textContent = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) + ', ' + new Date().toLocaleDateString([], { day: 'numeric', month: 'short' });
+
+      const prio = activePatient.priority || 'normal';
+      if (dom.slipPriorityTag) {
+        dom.slipPriorityTag.textContent = prio === 'emergency' ? '🚨 EMERGENCY FAST-TRACK' : (prio === 'priority' ? '🟡 PRIORITY (SENIOR/CHILD)' : 'ROUTINE OPD');
+      }
+
+      // Fetch dynamic QR code
+      try {
+        const res = await fetch(`/api/qrcode/${encodeURIComponent(myPatientToken)}`);
+        if (res.ok) {
+          const data = await res.json();
+          if (dom.slipQrImage && data.dataUrl) {
+            dom.slipQrImage.src = data.dataUrl;
+          }
+        }
+      } catch (err) {
+        console.warn('Failed to load QR code image:', err);
+      }
+
+      if (dom.qrPassModal) dom.qrPassModal.style.display = 'flex';
+    });
+  }
+
+  if (dom.btnCloseQrModal) {
+    dom.btnCloseQrModal.addEventListener('click', () => {
+      if (dom.qrPassModal) dom.qrPassModal.style.display = 'none';
+    });
+  }
+
+  if (dom.btnPrintQrSlip) {
+    dom.btnPrintQrSlip.addEventListener('click', () => {
+      triggerHaptic(20);
+      window.print();
+    });
+  }
+
+  if (dom.btnCopyQrLink) {
+    dom.btnCopyQrLink.addEventListener('click', () => {
+      triggerHaptic(20);
+      const url = `${window.location.origin}/#patient?token=${encodeURIComponent(myPatientToken)}`;
+      if (navigator.clipboard) {
+        navigator.clipboard.writeText(url).then(() => {
+          showToast('Live tracking link copied to clipboard!', 'success', '📋');
+        }).catch(() => {
+          showToast(url, 'info', '🔗');
+        });
+      } else {
+        showToast(url, 'info', '🔗');
+      }
+    });
+  }
 
   // Lookup Token
   dom.btnLookupToken.addEventListener('click', async () => {
@@ -843,8 +1022,45 @@
   });
 
   /* ========================================================
-     DOCTOR DASHBOARD ACTIONS
+     DOCTOR DASHBOARD ACTIONS & CLINICAL NOTES
      ======================================================== */
+  // Clinical Notes Quick Chips
+  dom.rxQuickChips.forEach(chip => {
+    chip.addEventListener('click', () => {
+      triggerHaptic(15);
+      const tmpl = chip.dataset.template;
+      if (dom.docRxInput) {
+        dom.docRxInput.value = dom.docRxInput.value ? (dom.docRxInput.value + '\n' + tmpl) : tmpl;
+        // Autosave notes
+        fetch('/api/doctor/notes', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ notes: dom.docRxInput.value, prescription: dom.docRxInput.value })
+        }).catch(() => {});
+      }
+    });
+  });
+
+  // Clinical Notes Autosave Debounce
+  if (dom.docRxInput) {
+    let rxDebounce = null;
+    dom.docRxInput.addEventListener('input', () => {
+      clearTimeout(rxDebounce);
+      if (dom.rxSavedStatus) dom.rxSavedStatus.textContent = 'Saving...';
+      rxDebounce = setTimeout(() => {
+        fetch('/api/doctor/notes', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ notes: dom.docRxInput.value, prescription: dom.docRxInput.value })
+        }).then(() => {
+          if (dom.rxSavedStatus) dom.rxSavedStatus.textContent = 'Autosaved';
+        }).catch(() => {
+          if (dom.rxSavedStatus) dom.rxSavedStatus.textContent = 'Unsaved';
+        });
+      }, 600);
+    });
+  }
+
   dom.btnDocCallNext.addEventListener('click', async () => {
     try {
       triggerHaptic(30);
@@ -852,7 +1068,9 @@
       const res = await fetch('/api/doctor/call-next', { method: 'POST' });
       const data = await res.json();
       if (data.currentPatient && window.soundEffects) {
-        window.soundEffects.announce(data.currentPatient.token, queueState.settings.roomNumber);
+        const isEmg = data.currentPatient.priority === 'emergency';
+        const lang = queueState.settings?.announcementLang || 'en-US';
+        window.soundEffects.announce(data.currentPatient.token, queueState.settings.roomNumber, isEmg, lang);
       }
     } catch (err) {
       console.error(err);
@@ -864,7 +1082,13 @@
   dom.btnDocComplete.addEventListener('click', async () => {
     try {
       triggerHaptic(20);
-      await fetch('/api/doctor/complete', { method: 'POST' });
+      const notesVal = dom.docRxInput ? dom.docRxInput.value : '';
+      await fetch('/api/doctor/complete', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ notes: notesVal, prescription: notesVal })
+      });
+      if (dom.docRxInput) dom.docRxInput.value = '';
     } catch (err) {
       console.error(err);
     }
@@ -885,7 +1109,9 @@
       const res = await fetch('/api/doctor/recall', { method: 'POST' });
       const data = await res.json();
       if (data.success && queueState.currentPatient && window.soundEffects) {
-        window.soundEffects.announce(queueState.currentPatient.token, queueState.settings.roomNumber);
+        const isEmg = queueState.currentPatient.priority === 'emergency';
+        const lang = queueState.settings?.announcementLang || 'en-US';
+        window.soundEffects.announce(queueState.currentPatient.token, queueState.settings.roomNumber, isEmg, lang);
       }
     } catch (err) {
       console.error(err);
@@ -897,19 +1123,115 @@
     const avgTime = parseInt(dom.settingAvgTime.value, 10) || 7;
     const room = dom.settingRoom.value.trim() || 'Consultation Room 1';
     const doctor = dom.settingDoctor ? dom.settingDoctor.value.trim() : 'Dr. Naveen Pn';
+    const lang = dom.settingLang ? dom.settingLang.value : 'en-US';
 
     try {
       triggerHaptic(20);
       await fetch('/api/doctor/settings', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ avgConsultationTime: avgTime, roomNumber: room, doctorName: doctor })
+        body: JSON.stringify({ avgConsultationTime: avgTime, roomNumber: room, doctorName: doctor, announcementLang: lang })
       });
+      if (window.soundEffects) window.soundEffects.setLanguage(lang);
       showToast('Settings synced to all screens!', 'success', '⚙️');
     } catch (err) {
       showToast('Failed to save settings.', 'error', '⚠️');
     }
   });
+
+  /* ========================================================
+     ANALYTICS DASHBOARD & CSV EXPORT
+     ======================================================== */
+  let cachedAnalyticsData = null;
+
+  if (dom.btnOpenAnalytics) {
+    dom.btnOpenAnalytics.addEventListener('click', async () => {
+      triggerHaptic(20);
+      try {
+        const res = await fetch('/api/analytics');
+        if (res.ok) {
+          const data = await res.json();
+          cachedAnalyticsData = data;
+
+          if (dom.kpiAvgWait) dom.kpiAvgWait.textContent = `~${data.avgWaitTime}m`;
+          if (dom.kpiAvgConsult) dom.kpiAvgConsult.textContent = `~${data.avgConsultDuration}m`;
+          if (dom.kpiTotalCompleted) dom.kpiTotalCompleted.textContent = String(data.totalServed);
+          if (dom.kpiEmergencyCount) dom.kpiEmergencyCount.textContent = String(data.emergencyCount);
+
+          // Render Hourly Rush Chart
+          if (dom.rushChartBars && data.hourlyRush) {
+            const maxCount = Math.max(1, ...data.hourlyRush.map(h => h.count));
+            dom.rushChartBars.innerHTML = data.hourlyRush.map(h => {
+              const heightPct = Math.round((h.count / maxCount) * 85);
+              return `
+                <div class="rush-bar-item">
+                  <span class="rush-bar-val">${h.count}</span>
+                  <div class="rush-bar-fill" style="height: ${heightPct}%;"></div>
+                  <span class="rush-bar-label">${h.hour}</span>
+                </div>
+              `;
+            }).join('');
+          }
+
+          // Render Department Breakdown
+          if (dom.deptDistributionList && data.departmentBreakdown) {
+            const keys = Object.keys(data.departmentBreakdown);
+            if (keys.length === 0) {
+              dom.deptDistributionList.innerHTML = '<div style="font-size: 0.8rem; color: var(--text-muted);">No data yet</div>';
+            } else {
+              dom.deptDistributionList.innerHTML = keys.map(k => `
+                <div class="dept-dist-row">
+                  <span>${escapeHtml(k)}</span>
+                  <strong>${data.departmentBreakdown[k]} patients</strong>
+                </div>
+              `).join('');
+            }
+          }
+
+          if (dom.analyticsModal) dom.analyticsModal.style.display = 'flex';
+        }
+      } catch (err) {
+        showToast('Failed to fetch analytics', 'error', '⚠️');
+      }
+    });
+  }
+
+  if (dom.btnCloseAnalyticsModal) {
+    dom.btnCloseAnalyticsModal.addEventListener('click', () => {
+      if (dom.analyticsModal) dom.analyticsModal.style.display = 'none';
+    });
+  }
+  if (dom.btnCloseAnalyticsModalBtn) {
+    dom.btnCloseAnalyticsModalBtn.addEventListener('click', () => {
+      if (dom.analyticsModal) dom.analyticsModal.style.display = 'none';
+    });
+  }
+
+  if (dom.btnExportCsv) {
+    dom.btnExportCsv.addEventListener('click', () => {
+      triggerHaptic(20);
+      const history = (cachedAnalyticsData && cachedAnalyticsData.history) ? cachedAnalyticsData.history : queueState.completedPatients;
+      if (!history || history.length === 0) {
+        showToast('No completed consultation records to export.', 'info', 'ℹ️');
+        return;
+      }
+
+      let csv = 'Token,Patient Name,Age,Department,Priority,Registered At,Called At,Completed At,Consult Duration (mins),Prescription / Notes\n';
+      history.forEach(p => {
+        const cleanNotes = (p.consultationNotes || p.prescription || '').replace(/"/g, '""').replace(/\n/g, ' ');
+        csv += `"${p.token}","${p.name || ''}","${p.age || ''}","${p.department || ''}","${p.priority || 'normal'}","${p.registeredAt || ''}","${p.calledAt || ''}","${p.completedAt || ''}","${p.consultDurationMins || ''}","${cleanNotes}"\n`;
+      });
+
+      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+      const link = document.createElement('a');
+      link.href = URL.createObjectURL(blob);
+      link.setAttribute('download', `hospital_queue_report_${new Date().toISOString().slice(0, 10)}.csv`);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      showToast('Consultation CSV report downloaded!', 'success', '📥');
+    });
+  }
 
   // Sound toggle
   dom.toggleSound.addEventListener('change', (e) => {

@@ -132,6 +132,23 @@
               <input type="hidden" id="regDept" value="General OPD" />
             </div>
 
+            <!-- Triage Urgency Level Chips -->
+            <div class="form-group">
+              <label>Triage Urgency Level</label>
+              <div class="priority-chips-grid" id="priorityChipsGrid">
+                <button type="button" class="priority-chip active" data-priority="normal">
+                  <span class="p-dot dot-normal"></span> Routine OPD
+                </button>
+                <button type="button" class="priority-chip chip-senior" data-priority="priority">
+                  <span class="p-dot dot-priority"></span> 🟡 Senior / Child
+                </button>
+                <button type="button" class="priority-chip chip-emergency" data-priority="emergency">
+                  <span class="p-dot dot-emergency"></span> 🚨 Emergency Fast-Track
+                </button>
+              </div>
+              <input type="hidden" id="regPriority" value="normal" />
+            </div>
+
             <div class="form-row">
               <div class="form-group">
                 <label for="regAge">Age (Optional)</label>
@@ -166,7 +183,10 @@
           <div class="ticket-cutout ticket-cutout-right"></div>
 
           <div class="ticket-header">
-            <div class="ticket-status-pill status-waiting" id="ticketStatusBadge">Waiting in Queue</div>
+            <div style="display: flex; gap: 0.5rem; justify-content: center; align-items: center; flex-wrap: wrap;">
+              <div class="ticket-status-pill status-waiting" id="ticketStatusBadge">Waiting in Queue</div>
+              <div class="ticket-priority-pill priority-normal" id="ticketPriorityBadge">Routine OPD</div>
+            </div>
             <div class="token-hero-wrap">
               <div class="token-hero" id="ticketTokenNumber">A-001</div>
               <button type="button" class="btn-copy-token" id="btnCopyToken" title="Copy Token Number">
@@ -243,6 +263,9 @@
 
           <!-- Footer Actions -->
           <div class="ticket-footer-actions">
+            <button type="button" class="btn btn-primary" id="btnOpenQrPass">
+              🎫 View Digital QR e-Pass / Print Slip
+            </button>
             <button type="button" class="btn btn-secondary" id="btnNewToken">
               ➕ Register Another Patient
             </button>
@@ -274,6 +297,11 @@
           <div class="stat-num" id="statSkipped" style="color: var(--danger);">0</div>
           <div class="stat-title">No-Shows</div>
         </div>
+        <div class="stat-item stat-item-action">
+          <button type="button" class="btn btn-secondary btn-sm" id="btnOpenAnalytics" style="width: 100%; font-weight: 600;">
+            📊 Analytics &amp; Reports
+          </button>
+        </div>
       </div>
 
       <div class="doctor-layout">
@@ -300,10 +328,24 @@
                 </div>
               </div>
 
+              <!-- Clinical Notes & Prescription Box -->
+              <div class="doc-rx-card">
+                <div class="doc-rx-header">
+                  <span>📝 Clinical Notes &amp; Prescription (Rx)</span>
+                  <span class="rx-saved-indicator" id="rxSavedStatus">Autosaved</span>
+                </div>
+                <div class="rx-quick-chips">
+                  <button type="button" class="rx-chip" data-template="Flu/Fever: Tab Paracetamol 500mg TDS x 3d, Cetirizine 10mg HS x 3d. Hydration &amp; rest.">💊 Flu &amp; Fever</button>
+                  <button type="button" class="rx-chip" data-template="Lab Referral: CBC, Blood Glucose (Fasting &amp; PP), Serum Creatinine. Review with reports.">🩸 Lab Work Ref</button>
+                  <button type="button" class="rx-chip" data-template="Vitals: BP 120/80 mmHg, Pulse 74 bpm, SpO2 99%. General health review satisfactory.">🩺 Vitals Check</button>
+                </div>
+                <textarea id="docRxInput" class="doc-rx-textarea" placeholder="Enter clinical observations, advice, or medication prescription here..."></textarea>
+              </div>
+
               <!-- In-Room Consultation Action Buttons -->
               <div class="serving-actions">
                 <button type="button" class="btn btn-success btn-sm" id="btnDocComplete" title="Mark patient as completed">
-                  ✅ Complete
+                  ✅ Complete &amp; Save Rx
                 </button>
                 <button type="button" class="btn btn-warning btn-sm" id="btnDocRecall" title="Re-announce chime and room number">
                   📢 Re-Announce
@@ -367,6 +409,14 @@
             <div class="config-row">
               <label for="toggleSound">Sound & Voice Chime:</label>
               <input type="checkbox" id="toggleSound" checked style="width: 18px; height: 18px; cursor: pointer;" />
+            </div>
+
+            <div class="config-row">
+              <label for="settingLang">Voice Language:</label>
+              <select id="settingLang" style="width: 140px; padding: 0.35rem 0.5rem; font-size: 0.85rem; border-radius: 6px; border: 1px solid var(--border-color); background: var(--bg-card); color: var(--text-main);">
+                <option value="en-US">English (US)</option>
+                <option value="hi-IN">Hindi (हिंदी)</option>
+              </select>
             </div>
 
             <button type="button" class="btn btn-secondary btn-sm" id="btnSaveSettings" style="width: 100%; margin-top: 0.5rem;">
@@ -507,8 +557,146 @@
           </div>
         </div>
 
+        <!-- FULL-SCREEN TV CALL OVERLAY TAKEOVER -->
+        <div class="tv-call-overlay" id="tvCallOverlay" style="display: none;">
+          <div class="tv-call-card" id="tvCallCard">
+            <div class="tv-call-radar">
+              <span class="tv-radar-pulse"></span>
+              <span class="tv-call-tag">🔔 NOW CALLING PATIENT</span>
+            </div>
+            <div class="tv-call-token" id="tvOverlayToken">A-001</div>
+            <div class="tv-call-patient" id="tvOverlayPatient">John Doe</div>
+            <div class="tv-call-meta" id="tvOverlayMeta">General OPD • Regular Priority</div>
+            <div class="tv-call-direction">
+              👉 PLEASE PROCEED TO <strong id="tvOverlayRoom">ROOM 1</strong>
+            </div>
+            <div class="tv-call-doctor" id="tvOverlayDoctor">Dr. Naveen Pn • Consultation Room 1</div>
+          </div>
+        </div>
+
       </div>
     </section>
+
+    <!-- MODAL 1: Digital QR e-Pass & Printable Thermal Slip -->
+    <div class="modal-backdrop" id="qrPassModal" style="display: none;">
+      <div class="modal-dialog qr-pass-dialog">
+        <div class="modal-header">
+          <div class="modal-title-wrap">
+            <span class="modal-icon">🎫</span>
+            <div>
+              <h3>Patient e-Pass &amp; QR Slip</h3>
+              <p>Scan with mobile camera to live-track from anywhere</p>
+            </div>
+          </div>
+          <button type="button" class="btn-close-modal" id="btnCloseQrModal" title="Close e-Pass">✕</button>
+        </div>
+
+        <!-- Thermal Slip Printable Zone -->
+        <div class="thermal-slip" id="printableSlip">
+          <div class="slip-header">
+            <div class="slip-clinic" id="slipClinicName">HealthFirst Medical Centre</div>
+            <div class="slip-doc" id="slipDoctorName">Dr. Naveen Pn • Room 1</div>
+            <div class="slip-divider">================================</div>
+            <div class="slip-token-title">QUEUE TOKEN NUMBER</div>
+            <div class="slip-token-lg" id="slipTokenNumber">A-001</div>
+            <div class="slip-priority-tag" id="slipPriorityTag">ROUTINE OPD</div>
+          </div>
+
+          <div class="slip-body">
+            <div class="slip-row"><span>Patient:</span><strong id="slipPatientName">John Doe</strong></div>
+            <div class="slip-row"><span>Department:</span><strong id="slipDepartment">General OPD</strong></div>
+            <div class="slip-row"><span>Position:</span><strong id="slipPosition">#1 in line</strong></div>
+            <div class="slip-row"><span>Est. Wait:</span><strong id="slipWait">~7 mins</strong></div>
+            <div class="slip-row"><span>Date/Time:</span><strong id="slipDateTime">Today</strong></div>
+          </div>
+
+          <div class="slip-divider">--------------------------------</div>
+
+          <!-- Dynamic QR Code -->
+          <div class="slip-qr-box">
+            <img id="slipQrImage" class="slip-qr-img" alt="QR Code to Live Track" src="" />
+            <div class="slip-qr-hint">Scan with mobile camera for live status</div>
+          </div>
+
+          <div class="slip-divider">================================</div>
+          <div class="slip-footer">Please watch the TV display or listen for audio chimes. Thank you!</div>
+        </div>
+
+        <!-- Modal Action Buttons -->
+        <div class="modal-actions">
+          <button type="button" class="btn btn-primary" id="btnPrintQrSlip">
+            🖨️ Print Slip / Save PDF
+          </button>
+          <button type="button" class="btn btn-secondary" id="btnCopyQrLink">
+            📋 Copy Live Tracking Link
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- MODAL 2: Hospital Queue Analytics & Reports -->
+    <div class="modal-backdrop" id="analyticsModal" style="display: none;">
+      <div class="modal-dialog analytics-dialog">
+        <div class="modal-header">
+          <div class="modal-title-wrap">
+            <span class="modal-icon">📊</span>
+            <div>
+              <h3>Queue Analytics &amp; Clinic Performance</h3>
+              <p>Real-time throughput, wait-time analysis &amp; reports</p>
+            </div>
+          </div>
+          <button type="button" class="btn-close-modal" id="btnCloseAnalyticsModal" title="Close Analytics">✕</button>
+        </div>
+
+        <div class="analytics-body">
+          <!-- Key Performance Metrics Grid -->
+          <div class="analytics-kpi-grid">
+            <div class="kpi-card">
+              <div class="kpi-val" id="kpiAvgWait" style="color: var(--primary);">~7m</div>
+              <div class="kpi-lbl">Avg Wait Time</div>
+            </div>
+            <div class="kpi-card">
+              <div class="kpi-val" id="kpiAvgConsult" style="color: var(--success);">~6.5m</div>
+              <div class="kpi-lbl">Avg Consultation Duration</div>
+            </div>
+            <div class="kpi-card">
+              <div class="kpi-val" id="kpiTotalCompleted" style="color: #6366f1;">0</div>
+              <div class="kpi-lbl">Patients Served Today</div>
+            </div>
+            <div class="kpi-card">
+              <div class="kpi-val" id="kpiEmergencyCount" style="color: var(--danger);">0</div>
+              <div class="kpi-lbl">Emergency Cases</div>
+            </div>
+          </div>
+
+          <!-- Hourly Rush Bar Chart -->
+          <div class="analytics-section">
+            <h4>📈 Hourly Patient Rush Distribution (09:00 - 18:00)</h4>
+            <div class="rush-chart-bars" id="rushChartBars">
+              <!-- Dynamic Bars inserted via JS -->
+            </div>
+          </div>
+
+          <!-- Department Volume Breakdown -->
+          <div class="analytics-section">
+            <h4>🩺 Volume Breakdown by Department</h4>
+            <div class="dept-distribution-list" id="deptDistributionList">
+              <!-- Dynamic Dept items inserted via JS -->
+            </div>
+          </div>
+        </div>
+
+        <!-- Modal Actions: Export CSV -->
+        <div class="modal-actions" style="justify-content: space-between;">
+          <button type="button" class="btn btn-success" id="btnExportCsv">
+            📥 Export Consultation History (CSV)
+          </button>
+          <button type="button" class="btn btn-secondary" id="btnCloseAnalyticsModalBtn">
+            Close
+          </button>
+        </div>
+      </div>
+    </div>
 
   </main>
 

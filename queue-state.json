@@ -1,7 +1,31 @@
 {
-  "tokenCounter": 6,
+  "tokenCounter": 10,
   "tokenPrefix": "A",
-  "activeQueue": [],
+  "activeQueue": [
+    {
+      "id": "p_1790064160500_3qcjk",
+      "token": "EMG-009",
+      "name": "Emergency Patient Test",
+      "age": 45,
+      "reason": "Chest Pain",
+      "department": "Cardiology",
+      "priority": "emergency",
+      "consultationNotes": "",
+      "prescription": "",
+      "registeredAt": "2026-09-22T08:02:40.501Z",
+      "status": "waiting"
+    },
+    {
+      "id": "p_1790063176502_qfthu",
+      "token": "A-008",
+      "name": "deekshith",
+      "age": null,
+      "reason": "General Consultation",
+      "department": "Pediatrics",
+      "registeredAt": "2026-09-22T07:46:16.502Z",
+      "status": "waiting"
+    }
+  ],
   "currentPatient": null,
   "completedPatients": [
     {
@@ -63,6 +87,30 @@
       "status": "completed",
       "calledAt": "2026-09-22T07:25:50.711Z",
       "completedAt": "2026-09-22T07:25:58.916Z"
+    },
+    {
+      "id": "p_1790062922749_6zejq",
+      "token": "A-006",
+      "name": "Naveen P N",
+      "age": 20,
+      "reason": "fever",
+      "department": "Pediatrics",
+      "registeredAt": "2026-09-22T07:42:02.749Z",
+      "status": "completed",
+      "calledAt": "2026-09-22T07:44:28.858Z",
+      "completedAt": "2026-09-22T07:44:31.325Z"
+    },
+    {
+      "id": "p_1790063124674_71xo2",
+      "token": "A-007",
+      "name": "maruthi",
+      "age": 90,
+      "reason": "saman noppi",
+      "department": "Orthopedics",
+      "registeredAt": "2026-09-22T07:45:24.674Z",
+      "status": "completed",
+      "calledAt": "2026-09-22T07:45:41.734Z",
+      "completedAt": "2026-09-22T07:45:43.416Z"
     }
   ],
   "skippedPatients": [],
@@ -73,9 +121,9 @@
     "roomNumber": "Consultation Room 1"
   },
   "lastAnnouncement": {
-    "token": "A-005",
-    "name": "shakil bro",
+    "token": "A-007",
+    "name": "maruthi",
     "room": "Consultation Room 1",
-    "timestamp": "2026-09-22T07:25:50.711Z"
+    "timestamp": "2026-09-22T07:45:41.734Z"
   }
 }

@@ -1,6 +1,6 @@
 /**
- * Synthesizes a clean, pleasant two-tone hospital chime using Web Audio API
- * and optional Text-to-Speech voice announcement.
+ * SoundEffects - Web Audio API synthesizer for clean hospital chimes
+ * and multi-language SpeechSynthesis announcements (English / Hindi / Regional).
  */
 
 class SoundEffects {
@@ -8,6 +8,7 @@ class SoundEffects {
     this.audioCtx = null;
     this.soundEnabled = true;
     this.voiceEnabled = true;
+    this.currentLanguage = 'en-US';
   }
 
   initContext() {
@@ -22,8 +23,12 @@ class SoundEffects {
     }
   }
 
-  // Play pleasant hospital ding-dong chime
-  playChime() {
+  setLanguage(lang) {
+    if (lang) this.currentLanguage = lang;
+  }
+
+  // Pleasant hospital ding-dong chime
+  playChime(isEmergency = false) {
     if (!this.soundEnabled) return;
     try {
       this.initContext();
@@ -31,7 +36,24 @@ class SoundEffects {
 
       const now = this.audioCtx.currentTime;
 
-      // Note 1: E5 (659.25 Hz)
+      if (isEmergency) {
+        // Urgent high-pitch double pulse
+        [0, 0.22, 0.44].forEach((delay, i) => {
+          const osc = this.audioCtx.createOscillator();
+          const gain = this.audioCtx.createGain();
+          osc.type = 'triangle';
+          osc.frequency.setValueAtTime(i % 2 === 0 ? 880 : 660, now + delay);
+          gain.gain.setValueAtTime(0.4, now + delay);
+          gain.gain.exponentialRampToValueAtTime(0.001, now + delay + 0.35);
+          osc.connect(gain);
+          gain.connect(this.audioCtx.destination);
+          osc.start(now + delay);
+          osc.stop(now + delay + 0.35);
+        });
+        return;
+      }
+
+      // Standard hospital chime: E5 (659.25 Hz)
       const osc1 = this.audioCtx.createOscillator();
       const gain1 = this.audioCtx.createGain();
       osc1.type = 'sine';
@@ -43,7 +65,7 @@ class SoundEffects {
       osc1.start(now);
       osc1.stop(now + 0.8);
 
-      // Note 2: C5 (523.25 Hz) - 0.25s later (the "dong")
+      // Note 2: C5 (523.25 Hz) - 0.25s later
       const osc2 = this.audioCtx.createOscillator();
       const gain2 = this.audioCtx.createGain();
       osc2.type = 'sine';
@@ -59,30 +81,44 @@ class SoundEffects {
     }
   }
 
-  // Voice announcement using browser SpeechSynthesis
-  announce(token, roomNumber = 'Room 1') {
-    this.playChime();
+  // Voice announcement using browser SpeechSynthesis with language localization
+  announce(token, roomNumber = 'Room 1', isEmergency = false, customLang = null) {
+    this.playChime(isEmergency);
 
     if (!this.voiceEnabled || !('speechSynthesis' in window)) return;
 
-    // Delay slightly so chime plays first
+    const lang = customLang || this.currentLanguage || 'en-US';
+
     setTimeout(() => {
       try {
-        window.speechSynthesis.cancel(); // Cancel any ongoing speech
-        
-        // Format token for speech: "A-014" -> "Token A 14"
+        window.speechSynthesis.cancel();
+
         const cleanToken = token.replace('-', ' ');
-        const text = `Token ${cleanToken}, please proceed to ${roomNumber}`;
+        let text = `Token ${cleanToken}, please proceed to ${roomNumber}`;
+
+        if (lang.startsWith('hi')) {
+          text = `कृपया ध्यान दें: टोकन ${cleanToken}, कृपया ${roomNumber} में पधारें।`;
+        } else if (isEmergency) {
+          text = `Emergency alert: Priority Token ${cleanToken}, please proceed immediately to ${roomNumber}`;
+        }
+
         const utterance = new SpeechSynthesisUtterance(text);
-        utterance.rate = 0.9;
+        utterance.rate = lang.startsWith('hi') ? 0.85 : 0.9;
         utterance.pitch = 1.0;
-        utterance.lang = 'en-US';
+        utterance.lang = lang;
+
+        // Try selecting matching voice if available
+        if (typeof window.speechSynthesis.getVoices === 'function') {
+          const voices = window.speechSynthesis.getVoices();
+          const matchedVoice = voices.find(v => v.lang && v.lang.toLowerCase().startsWith(lang.toLowerCase().slice(0, 2)));
+          if (matchedVoice) utterance.voice = matchedVoice;
+        }
 
         window.speechSynthesis.speak(utterance);
       } catch (err) {
         console.warn('Speech synthesis error:', err);
       }
-    }, 900);
+    }, isEmergency ? 1100 : 900);
   }
 }
 
